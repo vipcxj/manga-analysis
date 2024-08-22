@@ -1,0 +1,93 @@
+
+@skip { space }
+
+@precedence {
+    times @left,
+    plus @left,
+    rel @left,
+}
+
+expression[@isGroup=Expression] {
+    Number |
+    String |
+    Identifier |
+    @specialize[@name=BooleanLiteral]<Identifier, "true" | "false"> |
+    RegExp |
+    ArrayExpression {
+      "[" commaSep1<"..."? expression | ""> "]"
+    } |
+    UnaryExpression |
+    ParenthesizedExpression |
+    BinaryExpression
+}
+
+//!commaSep
+
+commaSep<content> {
+    (content ("," content)*)?
+}
+  
+commaSep1<content> {
+    content ("," content)*
+}
+
+ParenthesizedExpression { "(" expression ")" }
+
+//!operators
+UnaryExpression {
+    (LogicOp<"!"> | ArithOp<"+" | "-">)
+    expression
+}
+  
+BinaryExpression {
+    expression !times (ArithOp<"/"> | ArithOp<"%"> | ArithOp<"*">) expression |
+    expression !plus ArithOp<"+" | "-"> expression |
+    expression !rel CompareOp expression
+}
+
+@tokens {
+    spaces[@export] { $[\u0009 \u000b\u00a0]+ }
+    newline[@export] { $[\r\n] }
+
+    identifierChar { @asciiLetter | $[_$\u{a1}-\u{10ffff}] }
+
+    Identifier { identifierChar (identifierChar | @digit)* }
+
+    //!numberTokens
+
+    hex { @digit | $[a-fA-F] }
+
+    Number {
+        (@digit ("_" | @digit)* ("." ("_" | @digit)*)? | "." @digit ("_" | @digit)*)
+            (("e" | "E") ("+" | "-")? ("_" | @digit)+)? |
+        @digit ("_" | @digit)* "n" |
+        "0x" (hex | "_")+ "n"? |
+        "0b" $[01_]+ "n"? |
+        "0o" $[0-7_]+ "n"?
+    }
+
+    @precedence { Number "." }
+    //!stringTokens
+    String {
+        '"' (![\\\n"] | "\\" _)* '"'? |
+        "'" (![\\\n'] | "\\" _)* "'"?
+    }
+
+    //!operatorTokens
+
+    ArithOp<expr> { expr }
+    LogicOp<expr> { expr }
+
+    CompareOp { ("<" | ">" | "==" | "!=") "="? }
+    PipeOp { "|" }
+
+    //!regexpTokens
+
+    RegExp { "/" (![/\\\n[] | "\\" ![\n] | "[" (![\n\\\]] | "\\" ![\n])* "]")+ ("/" $[gimsuy]*)? }
+
+    //!literalTokens
+
+    "=" "..." "=>"
+    "(" ")" "[" "]" "{" "}"
+    "." "," ";" ":"
+}
