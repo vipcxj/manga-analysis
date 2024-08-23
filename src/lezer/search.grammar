@@ -1,17 +1,67 @@
+@skip { spaces }
 
-@skip { space }
+@detectDelim
 
 @precedence {
     times @left,
     plus @left,
-    rel @left,
+    not
+    and @left,
+    or @left
 }
+
+@top Pipeline {
+    state ("|" state)*
+}
+
+state {
+    MatchState
+}
+
+MatchState {
+    kw<"match"> ":" matchCondition
+}
+
+matchCondition {
+    AndCondition | OrCondition | NotCondition | CmpCondition | ParenthesizedCondition
+}
+
+AndCondition {
+    matchCondition !and "and" matchCondition
+}
+
+OrCondition {
+    matchCondition !or "or" matchCondition
+}
+
+NotCondition {
+    !not kw<"not"> matchCondition
+}
+
+CmpCondition {
+    expression CmpOp<"=" | "<" | "<=" | ">" | ">="> expression | expression CmpOp<"=" | "<" | "<=" | ">" | ">="> "(" logicalExpression ")" | "(" logicalExpression ")" CmpOp<"=" | "<" | "<=" | ">" | ">="> expression
+}
+
+ParenthesizedCondition { "(" matchCondition ")" }
+
+logicalExpression[@isGroup=LogicalExpression] {
+    AndLogicalExpression | OrLogicalExpression
+}
+
+AndLogicalExpression {
+    (expression | logicalExpression) !and "and" (expression | logicalExpression)
+}
+
+OrLogicalExpression {
+    (expression | logicalExpression) !or "or" (expression | logicalExpression)
+}
+
 
 expression[@isGroup=Expression] {
     Number |
     String |
     Identifier |
-    @specialize[@name=BooleanLiteral]<Identifier, "true" | "false"> |
+    kw<"true"> | kw<"false"> |
     RegExp |
     ArrayExpression {
       "[" commaSep1<"..."? expression | ""> "]"
@@ -31,18 +81,19 @@ commaSep1<content> {
     content ("," content)*
 }
 
+kw<word> { @specialize[@name={word}]<Identifier, word> }
+
 ParenthesizedExpression { "(" expression ")" }
 
 //!operators
 UnaryExpression {
-    (LogicOp<"!"> | ArithOp<"+" | "-">)
+    ArithOp<"+" | "-">
     expression
 }
   
 BinaryExpression {
     expression !times (ArithOp<"/"> | ArithOp<"%"> | ArithOp<"*">) expression |
-    expression !plus ArithOp<"+" | "-"> expression |
-    expression !rel CompareOp expression
+    expression !plus ArithOp<"+" | "-"> expression
 }
 
 @tokens {
@@ -76,9 +127,9 @@ BinaryExpression {
     //!operatorTokens
 
     ArithOp<expr> { expr }
-    LogicOp<expr> { expr }
 
-    CompareOp { ("<" | ">" | "==" | "!=") "="? }
+    CmpOp<expr> { expr }
+
     PipeOp { "|" }
 
     //!regexpTokens

@@ -6,13 +6,16 @@
     "dev": "next dev -H 0.0.0.0 -p 4500",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "gen-lang": "lezer-generator src/lezer/search.grammar -o src/lezer/search.lang.js"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.0",
     "@codemirror/language": "^6.10.2",
+    "@codemirror/lint": "^6.8.1",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.32.0",
+    "@lezer/highlight": "^1.2.1",
     "@lezer/lr": "^1.4.2",
     "@reduxjs/toolkit": "^2.2.7",
     "@uiw/react-codemirror": "^4.23.0",

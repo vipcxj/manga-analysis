@@ -1,7 +1,10 @@
 import CodeMirror, { ReactCodeMirrorProps } from '@uiw/react-codemirror';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { EditorState } from '@codemirror/state';
+import { search as searchLanguage } from './lang';
 import { drawSelection, dropCursor } from '@codemirror/view';
+import { autocompletion } from '@codemirror/autocomplete';
+import { linter } from '@codemirror/lint';
 import { indentOnInput, syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 
 export interface PureSearchProps {
@@ -24,10 +27,15 @@ const oneLine = EditorState.transactionFilter.of(tr => (
     : [tr]
 ));
 
+
 export default function ({ value, onValueChange, className }: PureSearchProps) {
     const onChange = React.useCallback<OnChangeType>((val, viewUpdate) => {
         onValueChange(val);
     }, []);
+    const extensionList = useMemo(
+        () => [autocompletion({ activateOnTyping: true }), searchLanguage()],
+        [],
+    );
     return <CodeMirror
         value={value}
         onChange={onChange}
@@ -36,9 +44,6 @@ export default function ({ value, onValueChange, className }: PureSearchProps) {
             lineNumbers: false,
             foldGutter: false,
         }}
-        extensions={[
-
-            //oneLine,
-        ]}
+        extensions={extensionList}
     />;
 }
