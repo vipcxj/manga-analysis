@@ -12,7 +12,7 @@ export default function Search(props: SearchProps) {
     const searchStatus = useAppSelector(selectSearchStatus);
     const handleSearchExprChange = React.useCallback((expr: string) => {
         dispatch(setSearchExpr(expr));
-    }, []);
+    }, [dispatch]);
     return (
         <div>
             <PureSearch value={searchExpr} onValueChange={handleSearchExprChange} {...props} />

@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { EditorState } from '@codemirror/state';
 import { search as searchLanguage } from './lang';
 import { drawSelection, dropCursor } from '@codemirror/view';
-import { autocompletion } from '@codemirror/autocomplete';
+import { autocompletion, closeBrackets } from '@codemirror/autocomplete';
 import { linter } from '@codemirror/lint';
 import { indentOnInput, syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 
@@ -28,22 +28,24 @@ const oneLine = EditorState.transactionFilter.of(tr => (
 ));
 
 
-export default function ({ value, onValueChange, className }: PureSearchProps) {
+export default function PureSearch({ value, onValueChange, className }: PureSearchProps) {
     const onChange = React.useCallback<OnChangeType>((val, viewUpdate) => {
         onValueChange(val);
-    }, []);
+    }, [onValueChange]);
     const extensionList = useMemo(
-        () => [autocompletion({ activateOnTyping: true }), searchLanguage()],
+        () => [
+            syntaxHighlighting(defaultHighlightStyle),
+            autocompletion({ activateOnTyping: true }),
+            searchLanguage(),
+            closeBrackets(),
+        ],
         [],
     );
     return <CodeMirror
         value={value}
         onChange={onChange}
         className={className}
-        basicSetup={{
-            lineNumbers: false,
-            foldGutter: false,
-        }}
+        basicSetup={false}
         extensions={extensionList}
     />;
 }

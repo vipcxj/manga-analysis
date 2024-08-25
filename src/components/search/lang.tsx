@@ -2,6 +2,7 @@ import { parser } from '@/lezer/search.lang';
 import { LRLanguage, LanguageSupport } from '@codemirror/language';
 import { autocompletion, closeBrackets, completeFromList } from '@codemirror/autocomplete';
 import { styleTags, tags as t } from '@lezer/highlight';
+import { completionSource } from './autocomplete';
 
 export const searchLanguage = LRLanguage.define({
     parser: parser.configure({
@@ -11,6 +12,8 @@ export const searchLanguage = LRLanguage.define({
                 String: t.string,
                 Number: t.number,
                 match: t.keyword,
+                OpAnd: t.keyword,
+                OpOr: t.keyword,
                 "true false": t.bool,
                 CmpOp: t.compareOperator,
                 ArithOp: t.arithmeticOperator,
@@ -26,12 +29,15 @@ export const searchLanguage = LRLanguage.define({
 })
 
 export const searchCompletion = searchLanguage.data.of({
-    autocompletion: completeFromList([
-        { label: 'test01', type: 'Identifier' },
-        { label: 'test02', type: 'Identifier' },
-        { label: 'test03', type: 'Identifier' },
-        { label: 'match', type: 'match' },
-    ]),
+    autocomplete: completionSource,
+    // autocomplete: completeFromList([
+    //     { label: 'test01', type: 'variable' },
+    //     { label: 'test02', type: 'variable' },
+    //     { label: 'test03', type: 'variable' },
+    //     { label: 'match', type: 'keyword' },
+    //     { label: 'or', type: 'keyword' },
+    //     { label: 'and', type: 'keyword' },
+    // ]),
 });
 
 export function search() {

@@ -27,11 +27,11 @@ matchCondition {
 }
 
 AndCondition {
-    matchCondition !and "and" matchCondition
+    matchCondition !and OpAnd matchCondition
 }
 
 OrCondition {
-    matchCondition !or "or" matchCondition
+    matchCondition !or OpOr matchCondition
 }
 
 NotCondition {
@@ -49,11 +49,11 @@ logicalExpression[@isGroup=LogicalExpression] {
 }
 
 AndLogicalExpression {
-    (expression | logicalExpression) !and "and" (expression | logicalExpression)
+    (expression | logicalExpression) !and OpAnd (expression | logicalExpression)
 }
 
 OrLogicalExpression {
-    (expression | logicalExpression) !or "or" (expression | logicalExpression)
+    (expression | logicalExpression) !or OpOr (expression | logicalExpression)
 }
 
 
@@ -129,6 +129,9 @@ BinaryExpression {
     ArithOp<expr> { expr }
 
     CmpOp<expr> { expr }
+
+    OpAnd { "and" }
+    OpOr { "or" }
 
     PipeOp { "|" }
 

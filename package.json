@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "gen-lang": "lezer-generator src/lezer/search.grammar -o src/lezer/search.lang.js"
+    "prepare": "lezer-generator src/lezer/search.grammar -o src/lezer/search.lang.js && antlr4ng -Dlanguage=TypeScript -o src/antlr/ssearch/parser -visitor -listener -Xexact-output-dir src/antlr/ssearch/grammar/SSearch.g4"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.0",
@@ -15,10 +15,13 @@
     "@codemirror/lint": "^6.8.1",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.32.0",
+    "@lezer/common": "^1.2.1",
     "@lezer/highlight": "^1.2.1",
     "@lezer/lr": "^1.4.2",
     "@reduxjs/toolkit": "^2.2.7",
     "@uiw/react-codemirror": "^4.23.0",
+    "antlr4-c3": "^3.4.1",
+    "antlr4ng": "^3.0.4",
     "next": "14.2.6",
     "react": "^18",
     "react-dom": "^18",
@@ -29,6 +32,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "antlr4ng-cli": "^2.0.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.6",
     "postcss": "^8",
