@@ -1,8 +1,8 @@
 grammar SSearch;
 
-pipeline: state (PIPE state)*;
+pipeline: searchState (PIPE searchState)*;
 
-state: matchState;
+searchState: matchState;
 
 matchState: MATCH COLON matchCondition;
 

@@ -1,6 +1,10 @@
 import { CompletionContext, CompletionResult, snippetCompletion as snip } from "@codemirror/autocomplete"
 import { syntaxTree } from "@codemirror/language"
 import { SyntaxNode } from '@lezer/common';
+import { CharStream, CommonTokenStream, Parser } from 'antlr4ng';
+import { SSearchLexer } from '@/antlr/ssearch/parser/SSearchLexer';
+import { SSearchParser } from '@/antlr/ssearch/parser/SSearchParser';
+import { CodeCompletionCore, TokenList } from 'antlr4-c3';
 
 const dontComplete = ["String", "Number"];
 
@@ -21,6 +25,25 @@ function directInPipeline(node: SyntaxNode) {
 }
 
 export function completionSource(context: CompletionContext): CompletionResult | null {
+    const code = context.state.doc.toString();
+    const lexer = new SSearchLexer(CharStream.fromString(code));
+    const tokenStream = new CommonTokenStream(lexer);
+    const parser = new SSearchParser(tokenStream);
+    parser.removeErrorListeners();
+    parser.pipeline();
+    const c3 = new CodeCompletionCore(parser);
+    c3.showResult = true;
+    c3.ignoredTokens = new Set([
+        SSearchLexer.STRING_LITERAL,
+        SSearchLexer.DECIMAL_LITERAL,
+        SSearchLexer.HEX_LITERAL,
+        SSearchLexer.OCT_LITERAL,
+        SSearchLexer.BINARY_LITERAL,
+        SSearchLexer.FLOAT_LITERAL,
+        SSearchLexer.HEX_FLOAT_LITERAL,
+    ]);
+    c3.collectCandidates(context.pos);
+
     const tree = syntaxTree(context.state);
     let inner = tree.resolveInner(context.pos, -1)
     if (dontComplete.indexOf(inner.name) > -1)
