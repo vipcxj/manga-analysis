@@ -1,8 +1,12 @@
 import { parser } from '@/lezer/search.lang';
 import { LRLanguage, LanguageSupport } from '@codemirror/language';
 import { CompletionContext } from '@codemirror/autocomplete';
+import { Extension, StateField } from '@codemirror/state';
 import { styleTags, tags as t } from '@lezer/highlight';
 import { completionSource, CompletionDataProvider } from './autocomplete';
+import { extraState, SSearchLangData } from './langdata';
+import { linter } from '@codemirror/lint';
+import { lintSource } from './linter';
 
 export const searchLanguage = LRLanguage.define({
     parser: parser.configure({
@@ -26,24 +30,16 @@ export const searchLanguage = LRLanguage.define({
             brackets: ["(", "[", "'", '"'],
         },
     },
-})
-
-export const searchCompletion = searchLanguage.data.of({
-    autocomplete: completionSource,
-    // autocomplete: completeFromList([
-    //     { label: 'test01', type: 'variable' },
-    //     { label: 'test02', type: 'variable' },
-    //     { label: 'test03', type: 'variable' },
-    //     { label: 'match', type: 'keyword' },
-    //     { label: 'or', type: 'keyword' },
-    //     { label: 'and', type: 'keyword' },
-    // ]),
 });
 
-export function search(dataProvider: CompletionDataProvider = { properties: [] }) {
-    return new LanguageSupport(searchLanguage, [
-        searchLanguage.data.of({
-            autocomplete: (ctx: CompletionContext) => completionSource(ctx, dataProvider),
-        })
-    ]);
+export function search(dataProvider: CompletionDataProvider = { properties: [] }): [StateField<SSearchLangData>, LanguageSupport, Extension] {
+    return [
+        extraState,
+        new LanguageSupport(searchLanguage, [
+            searchLanguage.data.of({
+                autocomplete: (ctx: CompletionContext) => completionSource(ctx, dataProvider),
+            })
+        ]),
+        linter(lintSource),
+    ];
 }

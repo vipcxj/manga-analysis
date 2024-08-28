@@ -1,27 +1,8 @@
-import { Completion, CompletionContext, CompletionResult, snippetCompletion as snip } from "@codemirror/autocomplete"
-import { SyntaxNode } from '@lezer/common';
-import { CharStream, CommonTokenStream, Parser, TokenStream } from 'antlr4ng';
+import { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete"
+import { CommonTokenStream } from 'antlr4ng';
 import { SSearchLexer } from '@/antlr/ssearch/parser/SSearchLexer';
-import { SSearchParser } from '@/antlr/ssearch/parser/SSearchParser';
-import { CodeCompletionCore, TokenList } from 'antlr4-c3';
-
-const dontComplete = ["String", "Number"];
-
-function getNearestNotErrorAncestor(node: SyntaxNode) {
-    if (!node.parent) {
-        return node.parent;
-    }
-    if (node.parent.type.isError) {
-        return getNearestNotErrorAncestor(node.parent);
-    } else {
-        return node.parent;
-    }
-}
-
-function directInPipeline(node: SyntaxNode) {
-    const ancestor = getNearestNotErrorAncestor(node);
-    return ancestor && ancestor.name == "Pipeline";
-}
+import { TokenList } from 'antlr4-c3';
+import { extraState } from "./langdata";
 
 function calcCaretTokenIndex(ts: CommonTokenStream, pos: number): [number, number] {
     const tokens = ts.getTokens()
@@ -123,7 +104,7 @@ const TOKEN_TO_CANDS: Token2Completions = {
     [SSearchLexer.CLOSE_PAR]: createStaticCompletions([createOtherCompletion(')')]),
     [SSearchLexer.COLON]: createStaticCompletions([createOtherCompletion(':')]),
     [SSearchLexer.DIV]: createStaticCompletions([createOpCompletion('/')]),
-    [SSearchLexer.EQUAL]: createStaticCompletions([createOpCompletion('=')]),
+    [SSearchLexer.EQ]: createStaticCompletions([createOpCompletion('=')]),
     [SSearchLexer.GE]: createStaticCompletions([createOpCompletion('>=')]),
     [SSearchLexer.GT]: createStaticCompletions([createOpCompletion('>')]),
     [SSearchLexer.IDENTIFIER]: createPropertiesCompletions,
@@ -165,27 +146,12 @@ function combineCompletionDatas(data: CompletionData, others: TokenList, dataPro
 }
 
 export function completionSource(context: CompletionContext, dataProvider: CompletionDataProvider = { properties: [] }): CompletionResult | null {
-    const code = context.state.doc.toString();
-    const lexer = new SSearchLexer(CharStream.fromString(code));
-    const tokenStream = new CommonTokenStream(lexer);
-    const parser = new SSearchParser(tokenStream);
-    parser.removeErrorListeners();
-    parser.pipeline();
+    const { tokenStream, parser, c3 } = context.state.field(extraState);
+
     const [cti, cti1] = calcCaretTokenIndex(tokenStream, context.pos);
     if (cti === -1) {
         return null;
     }
-    const c3 = new CodeCompletionCore(parser);
-    c3.showResult = true;
-    c3.ignoredTokens = new Set([
-        SSearchLexer.STRING_LITERAL,
-        SSearchLexer.DECIMAL_LITERAL,
-        SSearchLexer.HEX_LITERAL,
-        SSearchLexer.OCT_LITERAL,
-        SSearchLexer.BINARY_LITERAL,
-        SSearchLexer.FLOAT_LITERAL,
-        SSearchLexer.HEX_FLOAT_LITERAL,
-    ]);
     const completions: Completion[] = [];
     let from = context.pos;
     let found = false;

@@ -8,9 +8,9 @@ matchState: MATCH COLON matchCondition;
 
 matchCondition:
     parMatchCondition
-    | expression bop = (LT | LE | GT | GE) expression
-    | expression bop = (LT | LE | GT | GE) OPEN_PAR logicalExpression CLOSE_PAR
-    | OPEN_PAR logicalExpression CLOSE_PAR bop = (LT | LE | GT | GE) expression
+    | expression bop = (LT | LE | GT | GE | EQ) expression
+    | expression bop = (LT | LE | GT | GE | EQ) OPEN_PAR logicalExpression CLOSE_PAR
+    | OPEN_PAR logicalExpression CLOSE_PAR bop = (LT | LE | GT | GE | EQ) expression
     | NOT matchCondition
     | matchCondition AND matchCondition
     | matchCondition OR matchCondition
@@ -90,7 +90,7 @@ LT: '<';
 LE: '<=';
 GT: '>';
 GE: '>=';
-EQUAL: '=';
+EQ: '=';
 OPEN_PAR: '(';
 CLOSE_PAR: ')';
 
