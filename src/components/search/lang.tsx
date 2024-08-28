@@ -1,8 +1,8 @@
 import { parser } from '@/lezer/search.lang';
 import { LRLanguage, LanguageSupport } from '@codemirror/language';
-import { autocompletion, closeBrackets, completeFromList } from '@codemirror/autocomplete';
+import { CompletionContext } from '@codemirror/autocomplete';
 import { styleTags, tags as t } from '@lezer/highlight';
-import { completionSource } from './autocomplete';
+import { completionSource, CompletionDataProvider } from './autocomplete';
 
 export const searchLanguage = LRLanguage.define({
     parser: parser.configure({
@@ -40,6 +40,10 @@ export const searchCompletion = searchLanguage.data.of({
     // ]),
 });
 
-export function search() {
-    return new LanguageSupport(searchLanguage, [searchCompletion]);
+export function search(dataProvider: CompletionDataProvider = { properties: [] }) {
+    return new LanguageSupport(searchLanguage, [
+        searchLanguage.data.of({
+            autocomplete: (ctx: CompletionContext) => completionSource(ctx, dataProvider),
+        })
+    ]);
 }
