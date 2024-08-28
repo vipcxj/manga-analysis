@@ -2,10 +2,8 @@ import CodeMirror, { ReactCodeMirrorProps } from '@uiw/react-codemirror';
 import React, { useMemo } from 'react';
 import { EditorState } from '@codemirror/state';
 import { search as searchLanguage } from './lang';
-import { drawSelection, dropCursor } from '@codemirror/view';
 import { autocompletion, closeBrackets } from '@codemirror/autocomplete';
-import { linter } from '@codemirror/lint';
-import { indentOnInput, syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
+import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 
 export interface PureSearchProps {
     value: string;
