@@ -4,7 +4,7 @@ import { CompletionContext } from '@codemirror/autocomplete';
 import { Extension, StateField } from '@codemirror/state';
 import { styleTags, tags as t } from '@lezer/highlight';
 import { completionSource, CompletionDataProvider } from './autocomplete';
-import { extraState, SSearchLangData } from './langdata';
+import { completedStateEffectType, extraState, SSearchLangData } from './langdata';
 import { linter } from '@codemirror/lint';
 import { lintSource } from './linter';
 
@@ -40,6 +40,18 @@ export function search(dataProvider: CompletionDataProvider = { properties: [] }
                 autocomplete: (ctx: CompletionContext) => completionSource(ctx, dataProvider),
             })
         ]),
-        linter(lintSource),
+        linter(lintSource, {
+            needsRefresh: (update) => {
+                for (const transaction of update.transactions) {
+                    for (const effect of transaction.effects) {
+                        if (effect.is(completedStateEffectType)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            },
+            autoPanel: true,
+        }),
     ];
 }

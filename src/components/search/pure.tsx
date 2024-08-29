@@ -1,9 +1,11 @@
-import CodeMirror, { ReactCodeMirrorProps } from '@uiw/react-codemirror';
+import CodeMirror, { ReactCodeMirrorProps, ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import React, { useMemo } from 'react';
 import { EditorState } from '@codemirror/state';
+import { EditorView  } from '@codemirror/view';
 import { search as searchLanguage } from './lang';
 import { autocompletion, closeBrackets } from '@codemirror/autocomplete';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
+import { completedStateEffectType, extraState } from './langdata';
 
 export interface PureSearchProps {
     value: string;
@@ -25,6 +27,11 @@ const oneLine = EditorState.transactionFilter.of(tr => (
     : [tr]
 ));
 
+const searchTheme = EditorView.theme({
+    '&.cm-focused': {
+        outline: 'none',
+    },
+}, { dark: false });
 
 export default function PureSearch({ value, onValueChange, className }: PureSearchProps) {
     const onChange = React.useCallback<OnChangeType>((val, viewUpdate) => {
@@ -48,17 +55,33 @@ export default function PureSearch({ value, onValueChange, className }: PureSear
         ],
         [],
     );
+    const cmRef = React.useRef<ReactCodeMirrorRef>(null);
+    const onSearch = React.useCallback(async (evt: React.MouseEvent) => {
+        if (cmRef.current && cmRef.current.state) {
+            const data = cmRef.current.state.field(extraState, false);
+            if (data) {
+                const { diagnostics } = data;
+                if (diagnostics.length > 0) {
+                    cmRef.current.view?.dispatch({ effects: [completedStateEffectType.of(true)] })
+                }
+            }
+        }
+    }, [cmRef]);
     return <div className='pt-2 relative mx-auto text-gray-600 w-96'>
-        <div id='search' className='border-2 border-gray-300 bg-white h-8 px-1 pr-10 rounded-lg text-sm focus:outline-none'>
-            <CodeMirror
-                value={value}
-                onChange={onChange}
-                className={className}
-                basicSetup={false}
-                extensions={extensionList}
-            />
-        </div>
-        <button type="submit" className="absolute right-0 top-0 mt-4 mr-3">
+        <CodeMirror
+            id='search'
+            ref={cmRef}
+            value={value}
+            onChange={onChange}
+            className={`${className} border-2 border-gray-300 bg-white h-8 px-1 pr-10 rounded-lg text-sm focus:outline-none`}
+            basicSetup={false}
+            theme={searchTheme}
+            extensions={extensionList}
+        />
+        <button
+            type="submit" className="absolute right-0 top-0 mt-4 mr-3"
+            onClick={onSearch}
+        >
           <svg className="text-gray-600 h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
             xmlnsXlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px"
             viewBox="0 0 56.966 56.966" xmlSpace="preserve"

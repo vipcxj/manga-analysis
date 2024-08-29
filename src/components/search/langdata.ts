@@ -1,7 +1,7 @@
 import { SSearchLexer } from "@/antlr/ssearch/parser/SSearchLexer";
 import { SSearchParser } from "@/antlr/ssearch/parser/SSearchParser";
 import { Diagnostic } from "@codemirror/lint";
-import { EditorState, StateField } from "@codemirror/state";
+import { EditorState, StateEffect, StateField } from "@codemirror/state";
 import { CodeCompletionCore } from "antlr4-c3";
 import { CommonTokenStream, CharStream, ANTLRErrorListener, ATNConfigSet, ATNSimulator, BitSet, DFA, Parser, RecognitionException, Recognizer, Token } from "antlr4ng";
 
@@ -11,6 +11,7 @@ export interface SSearchLangData {
     parser: SSearchParser;
     c3: CodeCompletionCore;
     diagnostics: Diagnostic[];
+    lint: boolean;
 }
 
 class SimpleErrorListener implements ANTLRErrorListener {
@@ -52,7 +53,9 @@ class SimpleErrorListener implements ANTLRErrorListener {
 
 }
 
-function createSSearchLangData(state: EditorState): SSearchLangData {
+export const completedStateEffectType = StateEffect.define<boolean>();
+
+function createSSearchLangData(state: EditorState, lint: boolean): SSearchLangData {
     const code = state.doc.toString();
     const diagnostics: Diagnostic[] = [];
     const lexer = new SSearchLexer(CharStream.fromString(code));
@@ -78,15 +81,21 @@ function createSSearchLangData(state: EditorState): SSearchLangData {
         parser,
         c3,
         diagnostics,
+        lint,
     };
 }
 
 export const extraState = StateField.define<SSearchLangData>({
-    create: (state): SSearchLangData => createSSearchLangData(state),
+    create: (state): SSearchLangData => createSSearchLangData(state, false),
     update: (value, transaction): SSearchLangData => {
         if (transaction.docChanged) {
-            return createSSearchLangData(transaction.state);
+            return createSSearchLangData(transaction.state, false);
         } else {
+            for (const effect of transaction.effects) {
+                if (effect.is(completedStateEffectType)) {
+                    return createSSearchLangData(transaction.state, true);
+                }
+            }
             return value;
         }
     },

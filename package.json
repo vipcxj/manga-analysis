@@ -19,6 +19,7 @@
     "@lezer/highlight": "^1.2.1",
     "@lezer/lr": "^1.4.2",
     "@reduxjs/toolkit": "^2.2.7",
+    "@uiw/codemirror-themes": "^4.23.0",
     "@uiw/react-codemirror": "^4.23.0",
     "antlr4-c3": "^3.4.1",
     "antlr4ng": "^3.0.4",

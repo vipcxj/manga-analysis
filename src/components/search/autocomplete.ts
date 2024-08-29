@@ -4,42 +4,36 @@ import { SSearchLexer } from '@/antlr/ssearch/parser/SSearchLexer';
 import { TokenList } from 'antlr4-c3';
 import { extraState } from "./langdata";
 
-function calcCaretTokenIndex(ts: CommonTokenStream, pos: number): [number, number] {
+function calcCaretTokenIndex(ts: CommonTokenStream, pos: number): [number, number, boolean] {
     const tokens = ts.getTokens()
-    let cti = -1;
     let i = 0
     for (const token of tokens) {
         if (token.start !== -1 && pos >= token.start && token.stop !== -1 && pos <= token.stop) {
-            return [i, -1];
+            return [i, -1, true];
         } else if (token.start === pos && token.type === SSearchLexer.EOF) {
             if (i > 0) {
                 const before = tokens[i - 1];
                 if (before.type !== SSearchLexer.WS && before.stop !== -1 && before.stop === pos - 1) {
-                    return [i, i - 1];
+                    return [i, i - 1, true];
                 } else {
-                    return [i, -1];
+                    return [i, -1, true];
                 }
             } else {
-                return [0, -1];
+                return [0, -1, true];
             }
         }
         ++i;
     }
-    if (cti === -1) {
-        if (tokens && tokens.length > 0) {
-            const lastToken = tokens[tokens.length - 1];
-            if (lastToken.stop !== -1 && pos <= lastToken.stop) {
-                cti = tokens.length - 1;
-            } else if (lastToken.type === SSearchLexer.EOF) {
-                cti = tokens.length - 1;
-            } else {
-                cti = tokens.length;
-            }
+    if (tokens.length > 0) {
+        const lastToken = tokens[tokens.length - 1];
+        if (lastToken.type !== SSearchLexer.WS && lastToken.stop !== -1 && pos === lastToken.stop + 1) {
+            return [tokens.length, tokens.length - 1, false]
         } else {
-            cti = 0;
+            return [tokens.length, -1, false];
         }
+    } else {
+        return [0, -1, false];
     }
-    return [-1, -1];
 }
 
 export interface CompletionPropertyInfo {
@@ -148,7 +142,7 @@ function combineCompletionDatas(data: CompletionData, others: TokenList, dataPro
 export function completionSource(context: CompletionContext, dataProvider: CompletionDataProvider = { properties: [] }): CompletionResult | null {
     const { tokenStream, parser, c3 } = context.state.field(extraState);
 
-    const [cti, cti1] = calcCaretTokenIndex(tokenStream, context.pos);
+    const [cti, cti1, valid] = calcCaretTokenIndex(tokenStream, context.pos);
     if (cti === -1) {
         return null;
     }
@@ -180,8 +174,11 @@ export function completionSource(context: CompletionContext, dataProvider: Compl
     }
     if (!found) {
         const cands = c3.collectCandidates(cti);
-        const token = tokenStream.getTokens(cti, cti)[0];
-        const tokenText = tokenStream.getTextFromRange(token, token);
+        let tokenText: string = '';
+        if (valid) {
+            const token = tokenStream.getTokens(cti, cti)[0];
+            tokenText = tokenStream.getTextFromRange(token, token);
+        }
         cands.tokens.forEach((others, token) => {
             const creator = TOKEN_TO_CANDS[token]
             if (!!creator) {
