@@ -8,29 +8,33 @@ matchState: MATCH COLON matchCondition;
 
 matchCondition:
     parMatchCondition
-    | expression bop = (LT | LE | GT | GE | EQ) expression
-    | expression bop = (LT | LE | GT | GE | EQ) OPEN_PAR logicalExpression CLOSE_PAR
-    | OPEN_PAR logicalExpression CLOSE_PAR bop = (LT | LE | GT | GE | EQ) expression
-    | NOT matchCondition
-    | matchCondition AND matchCondition
-    | matchCondition OR matchCondition
+    | compareCondition
+    | NOT target = matchCondition
+    | left = matchCondition AND right = matchCondition
+    | left = matchCondition OR right = matchCondition
 ;
+
+compareCondition: compareCondition1 | compareCondition2 | compareCondition3;
+
+compareCondition1: expression bop = (LT | LE | GT | GE | EQ | NE) expression;
+compareCondition2: expression bop = (LT | LE | GT | GE | EQ | NE) OPEN_PAR logicalExpression CLOSE_PAR;
+compareCondition3: OPEN_PAR logicalExpression CLOSE_PAR bop = (LT | LE | GT | GE | EQ | NE) expression;
 
 parMatchCondition: OPEN_PAR matchCondition CLOSE_PAR;
 
 logicalExpression:
-    expression AND expression
-    | expression AND logicalExpression
-    | logicalExpression AND expression
-    | logicalExpression AND logicalExpression
-    | expression OR expression
-    | expression OR logicalExpression
-    | logicalExpression OR expression
-    | logicalExpression OR logicalExpression;
+    leftExpr = expression AND rightExpr = expression
+    | leftExpr = expression AND rightLogExpr = logicalExpression
+    | leftLogExpr = logicalExpression AND rightExpr = expression
+    | leftLogExpr = logicalExpression AND rightLogExpr = logicalExpression
+    | leftExpr = expression OR rightExpr = expression
+    | leftExpr = expression OR rightLogExpr = logicalExpression
+    | leftLogExpr = logicalExpression OR rightExpr = expression
+    | leftLogExpr = logicalExpression OR rightLogExpr = logicalExpression;
 
 expression:
 	primary
-    | prefix = ('+' | '-' | '!') expression
+    | prefix = (ADD | SUB | NT) expression
 	| expression bop = (MUL | DIV | MOD) expression
     | expression bop = (ADD | SUB) expression;
 
@@ -41,10 +45,16 @@ parExpression: OPEN_PAR expression CLOSE_PAR;
 identifier: IDENTIFIER;
 
 literal:
-	integerLiteral
-	| floatLiteral
-	| STRING_LITERAL
-	| BOOL_LITERAL;
+	numberLiteral
+	| stringLiteral
+	| boolLiteral;
+
+stringLiteral: STRING_LITERAL;
+
+boolLiteral: BOOL_LITERAL;
+
+numberLiteral:
+	integerLiteral | floatLiteral;
 
 integerLiteral:
 	DECIMAL_LITERAL
@@ -52,7 +62,7 @@ integerLiteral:
 	| OCT_LITERAL
 	| BINARY_LITERAL;
 
-floatLiteral: FLOAT_LITERAL | HEX_FLOAT_LITERAL;
+floatLiteral: FLOAT_LITERAL;
 
 MATCH: 'match';
 PIPE: '|';
@@ -72,9 +82,6 @@ FLOAT_LITERAL:
 	(Digits '.' Digits? | '.' Digits) ExponentPart?
 	| Digits (ExponentPart);
 
-HEX_FLOAT_LITERAL:
-	'0' [xX] (HexDigits '.'? | HexDigits? '.' HexDigits) [pP] [+-]? Digits;
-
 BOOL_LITERAL: 'true' | 'false';
 
 STRING_LITERAL:
@@ -91,12 +98,14 @@ LE: '<=';
 GT: '>';
 GE: '>=';
 EQ: '=';
+NE: '!=';
+NT: '!';
 OPEN_PAR: '(';
 CLOSE_PAR: ')';
 
 WS: [ \n\r\t] -> channel(HIDDEN);
 
-IDENTIFIER: Letter LetterOrDigit*;
+IDENTIFIER: Letter LetterOrDigit* ('.' Letter LetterOrDigit*) *;
 
 fragment ExponentPart: [eE] [+-]? Digits;
 

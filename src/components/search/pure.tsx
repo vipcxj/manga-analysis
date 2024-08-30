@@ -6,6 +6,7 @@ import { search as searchLanguage } from './lang';
 import { autocompletion, closeBrackets } from '@codemirror/autocomplete';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { completedStateEffectType, extraState } from './langdata';
+import { toAggregation } from './mongo';
 
 export interface PureSearchProps {
     value: string;
@@ -58,11 +59,13 @@ export default function PureSearch({ value, onValueChange, className }: PureSear
     const cmRef = React.useRef<ReactCodeMirrorRef>(null);
     const onSearch = React.useCallback(async (evt: React.MouseEvent) => {
         if (cmRef.current && cmRef.current.state) {
-            const data = cmRef.current.state.field(extraState, false);
+            const data = cmRef.current.view?.state.field(extraState, false);
             if (data) {
                 const { diagnostics } = data;
                 if (diagnostics.length > 0) {
                     cmRef.current.view?.dispatch({ effects: [completedStateEffectType.of(true)] })
+                } else {
+                    console.log(toAggregation(data));
                 }
             }
         }

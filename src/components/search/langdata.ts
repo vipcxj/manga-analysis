@@ -1,5 +1,5 @@
 import { SSearchLexer } from "@/antlr/ssearch/parser/SSearchLexer";
-import { SSearchParser } from "@/antlr/ssearch/parser/SSearchParser";
+import { PipelineContext, SSearchParser } from "@/antlr/ssearch/parser/SSearchParser";
 import { Diagnostic } from "@codemirror/lint";
 import { EditorState, StateEffect, StateField } from "@codemirror/state";
 import { CodeCompletionCore } from "antlr4-c3";
@@ -9,6 +9,7 @@ export interface SSearchLangData {
     lexer: SSearchLexer;
     tokenStream: CommonTokenStream;
     parser: SSearchParser;
+    pipeline: PipelineContext;
     c3: CodeCompletionCore;
     diagnostics: Diagnostic[];
     lint: boolean;
@@ -63,7 +64,7 @@ function createSSearchLangData(state: EditorState, lint: boolean): SSearchLangDa
     const parser = new SSearchParser(tokenStream);
     parser.removeErrorListeners();
     parser.addErrorListener(new SimpleErrorListener(state, diagnostics));
-    parser.pipeline();
+    const pipeline = parser.pipeline();
     const c3 = new CodeCompletionCore(parser);
     c3.showResult = true;
     c3.ignoredTokens = new Set([
@@ -73,12 +74,12 @@ function createSSearchLangData(state: EditorState, lint: boolean): SSearchLangDa
         SSearchLexer.OCT_LITERAL,
         SSearchLexer.BINARY_LITERAL,
         SSearchLexer.FLOAT_LITERAL,
-        SSearchLexer.HEX_FLOAT_LITERAL,
     ]);
     return {
         lexer,
         tokenStream,
         parser,
+        pipeline,
         c3,
         diagnostics,
         lint,
