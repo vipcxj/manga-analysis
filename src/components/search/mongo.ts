@@ -1,6 +1,19 @@
 import { SSearchVisitor } from "@/antlr/ssearch/parser/SSearchVisitor";
 import { SSearchLangData } from "./langdata";
-import { BoolLiteralContext, CompareCondition1Context, CompareCondition2Context, CompareCondition3Context, CompareConditionContext, ExpressionContext, FloatLiteralContext, IdentifierContext, IntegerLiteralContext, LiteralContext, LogicalExpressionContext, MatchConditionContext, NumberLiteralContext, ParExpressionContext, PrimaryContext, SSearchParser, StringLiteralContext } from "@/antlr/ssearch/parser/SSearchParser";
+import {
+    BoolLiteralContext,
+    CompareCondition1Context,
+    CompareCondition2Context,
+    CompareCondition3Context,
+    ExpressionContext,
+    FloatLiteralContext,
+    IdentifierContext,
+    IntegerLiteralContext,
+    LogicalExpressionContext,
+    MatchConditionContext,
+    ParExpressionContext,
+    StringLiteralContext
+} from "@/antlr/ssearch/parser/SSearchParser";
 import { SSearchLexer } from "@/antlr/ssearch/parser/SSearchLexer";
 
 interface NewField {
@@ -85,11 +98,11 @@ interface NotMatchState {
 interface SimpleMatchState {
     type: typeof SSearchLexer.MATCH;
     op: typeof SSearchLexer.EQ
-        | typeof SSearchLexer.LT
-        | typeof SSearchLexer.LE 
-        | typeof SSearchLexer.GT
-        | typeof SSearchLexer.GE
-        | typeof SSearchLexer.NE;
+    | typeof SSearchLexer.LT
+    | typeof SSearchLexer.LE
+    | typeof SSearchLexer.GT
+    | typeof SSearchLexer.GE
+    | typeof SSearchLexer.NE;
     left: VarType;
     right: VarType;
 }
@@ -202,10 +215,11 @@ function newFields2Mongo(fields: NewField[]) {
     const layers: NewField[][] = [];
     let layer: NewField[] = [];
     for (let i = 0; i < fields.length; ++i) {
+        const field = fields[i];
         let dep = false;
         for (let j = 0; j < i; ++j) {
             const other = fields[j];
-            if (isOpNodeDepOn(other.value, fields[i].name)) {
+            if (isOpNodeDepOn(field.value, other.name)) {
                 dep = true;
                 break;
             }
@@ -231,7 +245,7 @@ function newFields2Mongo(fields: NewField[]) {
 }
 
 function matchState2Mongo(state: MatchState): Record<string, any> {
-    switch(state.type) {
+    switch (state.type) {
         case SSearchLexer.AND:
             return {
                 $and: [matchState2Mongo(state.left), matchState2Mongo(state.right)],
@@ -247,7 +261,7 @@ function matchState2Mongo(state: MatchState): Record<string, any> {
         default:
             if (isGoodVariableNode(state.left) || isGoodVariableNode(state.right)) {
                 let mop: string, rmop: string;
-                switch(state.op) {
+                switch (state.op) {
                     case SSearchLexer.EQ:
                         mop = rmop = '$eq';
                         break;
@@ -282,7 +296,7 @@ function matchState2Mongo(state: MatchState): Record<string, any> {
                 }
             } else {
                 let op: string;
-                switch(state.op) {
+                switch (state.op) {
                     case SSearchLexer.EQ:
                         op = '$eq';
                         break;
@@ -396,7 +410,7 @@ class AggregationVisitor extends SSearchVisitor<any> {
             type: SSearchLexer.MATCH,
             op: ctx._bop?.type as SimpleMatchState['op'],
             left,
-            right, 
+            right,
         };
     };
 
