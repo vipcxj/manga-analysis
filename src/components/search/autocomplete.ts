@@ -1,4 +1,4 @@
-import { Completion, CompletionContext, CompletionResult, selectedCompletion, snippetCompletion } from "@codemirror/autocomplete"
+import { Completion, CompletionContext, CompletionResult, snippetCompletion } from "@codemirror/autocomplete"
 import { CommonTokenStream } from 'antlr4ng';
 import { SSearchLexer } from '@/antlr/ssearch/parser/SSearchLexer';
 import { TokenList } from 'antlr4-c3';
@@ -61,16 +61,15 @@ interface CompletionData {
     completion: Completion;
     friend?: string;
     friendNoSkip?: boolean;
-    lookAhead?: boolean;
 }
 
 type CompletionCreator = (provider: CompletionDataProvider) => CompletionData[];
 
 function createStaticCompletions(
     completions: Completion[], 
-    { friend, friendNoSkip, lookAhead }: {friend?: string, friendNoSkip?: boolean, lookAhead?: boolean } = {}
+    { friend, friendNoSkip }: {friend?: string, friendNoSkip?: boolean } = {}
 ): CompletionCreator {
-    return () => completions.map(completion => ({ completion, friend, friendNoSkip, lookAhead }));
+    return () => completions.map(completion => ({ completion, friend, friendNoSkip }));
 }
 
 function createKeywordCompletion(word: string): Completion {
@@ -132,7 +131,7 @@ interface Token2Completions {
 const TOKEN_TO_CANDS: Token2Completions = {
     [SSearchLexer.ADD]: createStaticCompletions([createOpCompletion('+')]),
     [SSearchLexer.AND]: createStaticCompletions([createKeywordCompletion('and')]),
-    [SSearchLexer.CLOSE_PAR]: createStaticCompletions([createOtherCompletion(')')], { lookAhead: true }),
+    [SSearchLexer.CLOSE_PAR]: createStaticCompletions([createOtherCompletion(')')]),
     [SSearchLexer.COLON]: createStaticCompletions([createOtherCompletion(':')]),
     [SSearchLexer.DIV]: createStaticCompletions([createOpCompletion('/')]),
     [SSearchLexer.EQ]: createStaticCompletions([createOpCompletion('=')]),
@@ -195,9 +194,6 @@ export function completionSource(context: CompletionContext, dataProvider: Compl
                 const creator = TOKEN_TO_CANDS[token]
                 if (!!creator) {
                     const datas = creator(dataProvider);
-                    if (datas && datas.length === 1 && datas[0].lookAhead) {
-                        const token = tokenStream
-                    }
                     datas.forEach(data => {
                         if (data.completion.label && data.completion.label.startsWith(token1Text)) {
                             found = true;
