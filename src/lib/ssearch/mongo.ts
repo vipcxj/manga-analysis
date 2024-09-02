@@ -1,5 +1,4 @@
 import { SSearchVisitor } from "@/antlr/ssearch/parser/SSearchVisitor";
-import { SSearchLangData } from "./langdata";
 import {
     BoolLiteralContext,
     CompareCondition1Context,
@@ -12,6 +11,7 @@ import {
     LogicalExpressionContext,
     MatchConditionContext,
     ParExpressionContext,
+    PipelineContext,
     StringLiteralContext
 } from "@/antlr/ssearch/parser/SSearchParser";
 import { SSearchLexer } from "@/antlr/ssearch/parser/SSearchLexer";
@@ -552,9 +552,9 @@ class AggregationVisitor extends SSearchVisitor<any> {
     };
 }
 
-export function toAggregation(data: SSearchLangData) {
+export function toAggregation(pipeline: PipelineContext) {
     const visitor = new AggregationVisitor();
-    const state = data.pipeline.accept(visitor) as MatchState;
+    const state = pipeline.accept(visitor) as MatchState;
     if (visitor.newFields.length > 0) {
         return [
             ...newFields2Mongo(visitor.newFields),

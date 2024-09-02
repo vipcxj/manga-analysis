@@ -6,7 +6,7 @@ import { search as searchLanguage } from './lang';
 import { autocompletion, closeBrackets } from '@codemirror/autocomplete';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { completedStateEffectType, extraState } from './langdata';
-import { toAggregation } from './mongo';
+import { toAggregation } from '../../lib/ssearch/mongo';
 
 export interface PureSearchProps {
     value: string;
@@ -65,7 +65,7 @@ export default function PureSearch({ value, onValueChange, className }: PureSear
                 if (diagnostics.length > 0) {
                     cmRef.current.view?.dispatch({ effects: [completedStateEffectType.of(true)] })
                 } else {
-                    console.log(toAggregation(data));
+                    console.log(toAggregation(data.pipeline));
                 }
             }
         }
