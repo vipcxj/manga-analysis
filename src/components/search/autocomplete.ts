@@ -1,4 +1,4 @@
-import { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete"
+import { Completion, CompletionContext, CompletionResult, selectedCompletion, snippetCompletion } from "@codemirror/autocomplete"
 import { CommonTokenStream } from 'antlr4ng';
 import { SSearchLexer } from '@/antlr/ssearch/parser/SSearchLexer';
 import { TokenList } from 'antlr4-c3';
@@ -7,9 +7,18 @@ import { extraState } from "./langdata";
 function calcCaretTokenIndex(ts: CommonTokenStream, pos: number): [number, number, boolean] {
     const tokens = ts.getTokens()
     let i = 0
+    let skipBecauseWs = false;
     for (const token of tokens) {
         if (token.start !== -1 && pos >= token.start && token.stop !== -1 && pos <= token.stop) {
-            return [i, -1, true];
+            if (token.type === SSearchLexer.WS) {
+                skipBecauseWs = true;
+                ++i;
+                continue;
+            } else {
+                return [i, -1, true];
+            }
+        } else if (skipBecauseWs && token.type !== SSearchLexer.WS) {
+            return [i - 1, -1, true];
         } else if (token.start === pos && token.type === SSearchLexer.EOF) {
             if (i > 0) {
                 const before = tokens[i - 1];
@@ -38,7 +47,10 @@ function calcCaretTokenIndex(ts: CommonTokenStream, pos: number): [number, numbe
 
 export interface CompletionPropertyInfo {
     name: string;
+    friend?: string;
+    friendNoSkip?: boolean;
     desc?: string;
+    snippet?: string;
 }
 
 export interface CompletionDataProvider {
@@ -47,12 +59,18 @@ export interface CompletionDataProvider {
 
 interface CompletionData {
     completion: Completion;
+    friend?: string;
+    friendNoSkip?: boolean;
+    lookAhead?: boolean;
 }
 
 type CompletionCreator = (provider: CompletionDataProvider) => CompletionData[];
 
-function createStaticCompletions(completions: Completion[]): CompletionCreator {
-    return () => completions.map(completion => ({ completion }));
+function createStaticCompletions(
+    completions: Completion[], 
+    { friend, friendNoSkip, lookAhead }: {friend?: string, friendNoSkip?: boolean, lookAhead?: boolean } = {}
+): CompletionCreator {
+    return () => completions.map(completion => ({ completion, friend, friendNoSkip, lookAhead }));
 }
 
 function createKeywordCompletion(word: string): Completion {
@@ -63,11 +81,19 @@ function createKeywordCompletion(word: string): Completion {
 }
 
 function createVariableCompletion(info: CompletionPropertyInfo): Completion {
-    return {
-        label: info.name,
-        type: 'variable',
-        detail: info.desc,
-    };
+    if (info.snippet) {
+        return snippetCompletion(info.snippet, {
+            label: info.name,
+            type: 'variable',
+            detail: info.desc,
+        });
+    } else {
+        return {
+            label: info.name,
+            type: 'variable',
+            detail: info.desc,
+        };
+    }
 }
 
 function createOpCompletion(op: string): Completion {
@@ -77,15 +103,26 @@ function createOpCompletion(op: string): Completion {
     };
 }
 
-function createOtherCompletion(other: string): Completion {
-    return {
-        label: other,
-        type: 'other',
-    };
+function createOtherCompletion(other: string, opts: { snippet?: string } = {}): Completion {
+    if (opts.snippet) {
+        return snippetCompletion(opts.snippet, {
+            label: other,
+            type: 'other',
+        });
+    } else {
+        return {
+            label: other,
+            type: 'other',
+        };
+    }
 }
 
 function createPropertiesCompletions(provider: CompletionDataProvider): CompletionData[] {
-    return provider.properties.map(p => ({ completion: createVariableCompletion(p) }));
+    return provider.properties.map(p => ({
+        completion: createVariableCompletion(p), 
+        friend: p.friend, 
+        friendNoSkip: p.friendNoSkip,
+    }));
 }
 
 interface Token2Completions {
@@ -95,7 +132,7 @@ interface Token2Completions {
 const TOKEN_TO_CANDS: Token2Completions = {
     [SSearchLexer.ADD]: createStaticCompletions([createOpCompletion('+')]),
     [SSearchLexer.AND]: createStaticCompletions([createKeywordCompletion('and')]),
-    [SSearchLexer.CLOSE_PAR]: createStaticCompletions([createOtherCompletion(')')]),
+    [SSearchLexer.CLOSE_PAR]: createStaticCompletions([createOtherCompletion(')')], { lookAhead: true }),
     [SSearchLexer.COLON]: createStaticCompletions([createOtherCompletion(':')]),
     [SSearchLexer.DIV]: createStaticCompletions([createOpCompletion('/')]),
     [SSearchLexer.EQ]: createStaticCompletions([createOpCompletion('=')]),
@@ -104,11 +141,11 @@ const TOKEN_TO_CANDS: Token2Completions = {
     [SSearchLexer.IDENTIFIER]: createPropertiesCompletions,
     [SSearchLexer.LE]: createStaticCompletions([createOpCompletion('<=')]),
     [SSearchLexer.LT]: createStaticCompletions([createOpCompletion('<')]),
-    [SSearchLexer.MATCH]: createStaticCompletions([createKeywordCompletion('match')]),
+    [SSearchLexer.MATCH]: createStaticCompletions([createKeywordCompletion('match')], { friend: ':', friendNoSkip: true }),
     [SSearchLexer.MOD]: createStaticCompletions([createOpCompletion('%')]),
     [SSearchLexer.MUL]: createStaticCompletions([createOpCompletion('*')]),
     [SSearchLexer.NOT]: createStaticCompletions([createKeywordCompletion('not')]),
-    [SSearchLexer.OPEN_PAR]: createStaticCompletions([createOtherCompletion('(')]),
+    [SSearchLexer.OPEN_PAR]: createStaticCompletions([createOtherCompletion('(', { snippet: '(${placeholder})' })]),
     [SSearchLexer.OR]: createStaticCompletions([createKeywordCompletion('or')]),
     [SSearchLexer.PIPE]: createStaticCompletions([createKeywordCompletion('|')]),
     [SSearchLexer.SUB]: createStaticCompletions([createOpCompletion('-')]),
@@ -128,12 +165,12 @@ function combineCompletionDatas(data: CompletionData, others: TokenList, dataPro
         if (datas.length === 0) {
             return data;
         }
-        if (combined.completion.type !== datas[0].completion.type) {
+        if (combined.completion.type !== datas[0].completion.type && combined.friend !== datas[0].completion.label) {
             return data;
         }
         combined.completion = {
             ...combined.completion,
-            label: `${combined.completion.label} ${datas[0].completion.label}`,
+            label: combined.friendNoSkip ? `${combined.completion.label}${datas[0].completion.label}` : `${combined.completion.label} ${datas[0].completion.label}`,
         };
     }
     return combined;
@@ -158,6 +195,9 @@ export function completionSource(context: CompletionContext, dataProvider: Compl
                 const creator = TOKEN_TO_CANDS[token]
                 if (!!creator) {
                     const datas = creator(dataProvider);
+                    if (datas && datas.length === 1 && datas[0].lookAhead) {
+                        const token = tokenStream
+                    }
                     datas.forEach(data => {
                         if (data.completion.label && data.completion.label.startsWith(token1Text)) {
                             found = true;
@@ -175,8 +215,13 @@ export function completionSource(context: CompletionContext, dataProvider: Compl
     if (!found) {
         const cands = c3.collectCandidates(cti);
         let tokenText: string = '';
+        let ws = false;
         if (valid) {
-            const token = tokenStream.getTokens(cti, cti)[0];
+            let token = tokenStream.getTokens(cti, cti)[0];
+            if (token.type === SSearchLexer.WS) {
+                ws = true;
+                token = tokenStream.getTokens(cti + 1, cti + 1)[0];
+            }
             tokenText = tokenStream.getTextFromRange(token, token);
         }
         cands.tokens.forEach((others, token) => {
@@ -184,7 +229,7 @@ export function completionSource(context: CompletionContext, dataProvider: Compl
             if (!!creator) {
                 const datas = creator(dataProvider);
                 datas.forEach(data => {
-                    if (data.completion.label && (!tokenText || tokenText.startsWith(data.completion.label))) {
+                    if (data.completion.label && (!tokenText  || (ws && tokenText !== data.completion.label) || (!ws && tokenText.startsWith(data.completion.label) && tokenText !== data.completion.label))) {
                         const combined = combineCompletionDatas(data, others, dataProvider);
                         completions.push(combined.completion);
                     }
