@@ -12,6 +12,7 @@ export interface PureSearchProps {
     value: string;
     onValueChange: (v: string) => void;
     className: string;
+    onSearch?: (code: string) => any;
 }
 
 type OnChangeType = NonNullable<ReactCodeMirrorProps['onChange']>;
@@ -34,7 +35,7 @@ const searchTheme = EditorView.theme({
     },
 }, { dark: false });
 
-export default function PureSearch({ value, onValueChange, className }: PureSearchProps) {
+export default function PureSearch({ value, onValueChange, className, onSearch }: PureSearchProps) {
     const onChange = React.useCallback<OnChangeType>((val, viewUpdate) => {
         onValueChange(val);
     }, [onValueChange]);
@@ -57,7 +58,7 @@ export default function PureSearch({ value, onValueChange, className }: PureSear
         [],
     );
     const cmRef = React.useRef<ReactCodeMirrorRef>(null);
-    const onSearch = React.useCallback(async (evt: React.MouseEvent) => {
+    const onClick = React.useCallback(async (evt: React.MouseEvent) => {
         if (cmRef.current && cmRef.current.state) {
             const data = cmRef.current.view?.state.field(extraState, false);
             if (data) {
@@ -65,11 +66,16 @@ export default function PureSearch({ value, onValueChange, className }: PureSear
                 if (diagnostics.length > 0) {
                     cmRef.current.view?.dispatch({ effects: [completedStateEffectType.of(true)] })
                 } else {
-                    console.log(toAggregation(data.pipeline));
+                    if (onSearch) {
+                        const code = cmRef.current.view?.state.doc.toString();
+                        if (code) {
+                            onSearch(code);
+                        }
+                    }
                 }
             }
         }
-    }, [cmRef]);
+    }, [cmRef, onSearch]);
     return <div className='pt-2 relative mx-auto text-gray-600 w-96'>
         <CodeMirror
             id='search'
@@ -83,7 +89,7 @@ export default function PureSearch({ value, onValueChange, className }: PureSear
         />
         <button
             type="submit" className="absolute right-0 top-0 mt-4 mr-3"
-            onClick={onSearch}
+            onClick={onClick}
         >
           <svg className="text-gray-600 h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
             xmlnsXlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px"

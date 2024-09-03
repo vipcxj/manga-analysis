@@ -38,3 +38,4 @@ next-env.d.ts
 *.lang.terms.js
 .antlr
 src/antlr/ssearch/parser
+.env

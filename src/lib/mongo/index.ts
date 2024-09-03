@@ -25,11 +25,11 @@ if (process.env.MONGODB_DB) {
 } else {
     mangasDbName = mongoConf.db;
 }
-let mangasColName: string;
-if (process.env.MONGODB_COL) {
-    mangasColName = process.env.MONGODB_COL;
+let mangaColName: string;
+if (process.env.MONGODB_COL_MANGA) {
+    mangaColName = process.env.MONGODB_COL_MANGA;
 } else {
-    mangasColName = mongoConf.db;
+    mangaColName = mongoConf.colManga;
 }
 
 const opts: MongoClientOptions = {
@@ -66,5 +66,5 @@ export async function dbMangas() {
 
 export async function colMangas() {
     const db = await dbMangas();
-    return db.collection(mangasColName);
+    return db.collection(mangaColName);
 }

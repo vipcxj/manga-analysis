@@ -11,7 +11,7 @@ export interface SearchReq {
     sort?: Sort
 }
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
     const {code, skip = 0, limit = 10, sort }: SearchReq = await req.json();
     const pipeline = parseSearchCode(code);
     const aggregation = toAggregation(pipeline);
@@ -20,9 +20,8 @@ export async function GET(req: NextRequest) {
     if (sort) {
         op = op.sort(sort);
     }
-    const res = await op;
     const docs: Document[] = [];
-    for await (const doc of res) {
+    for await (const doc of op) {
         docs.push(doc);
     }
     return docs;

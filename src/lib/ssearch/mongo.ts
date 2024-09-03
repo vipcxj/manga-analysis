@@ -561,6 +561,9 @@ export function toAggregation(pipeline: PipelineContext) {
             {
                 $match: matchState2Mongo(state),
             },
+            {
+                $unset: visitor.newFields.map(f => f.name),
+            },
         ];
     } else {
         return [

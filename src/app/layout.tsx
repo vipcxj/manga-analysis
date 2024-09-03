@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { config as configDotenv } from 'dotenv';
 import StoreProvider from "./StoreProvider";
 import Search from '@/components/search'
 import "./globals.css";
 
+configDotenv();
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {

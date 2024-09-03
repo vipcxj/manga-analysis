@@ -3,6 +3,7 @@ import { CommonTokenStream } from 'antlr4ng';
 import { SSearchLexer } from '@/antlr/ssearch/parser/SSearchLexer';
 import { TokenList } from 'antlr4-c3';
 import { extraState } from "./langdata";
+import { CompletionPropertyInfo } from "@/conf/ssearch";
 
 function calcCaretTokenIndex(ts: CommonTokenStream, pos: number): [number, number, boolean] {
     const tokens = ts.getTokens()
@@ -45,13 +46,7 @@ function calcCaretTokenIndex(ts: CommonTokenStream, pos: number): [number, numbe
     }
 }
 
-export interface CompletionPropertyInfo {
-    name: string;
-    friend?: string;
-    friendNoSkip?: boolean;
-    desc?: string;
-    snippet?: string;
-}
+export type { CompletionPropertyInfo } from '@/conf/ssearch';
 
 export interface CompletionDataProvider {
     properties: CompletionPropertyInfo[];
@@ -66,8 +61,8 @@ interface CompletionData {
 type CompletionCreator = (provider: CompletionDataProvider) => CompletionData[];
 
 function createStaticCompletions(
-    completions: Completion[], 
-    { friend, friendNoSkip }: {friend?: string, friendNoSkip?: boolean } = {}
+    completions: Completion[],
+    { friend, friendNoSkip }: { friend?: string, friendNoSkip?: boolean } = {}
 ): CompletionCreator {
     return () => completions.map(completion => ({ completion, friend, friendNoSkip }));
 }
@@ -118,8 +113,8 @@ function createOtherCompletion(other: string, opts: { snippet?: string } = {}): 
 
 function createPropertiesCompletions(provider: CompletionDataProvider): CompletionData[] {
     return provider.properties.map(p => ({
-        completion: createVariableCompletion(p), 
-        friend: p.friend, 
+        completion: createVariableCompletion(p),
+        friend: p.friend,
         friendNoSkip: p.friendNoSkip,
     }));
 }
@@ -225,7 +220,7 @@ export function completionSource(context: CompletionContext, dataProvider: Compl
             if (!!creator) {
                 const datas = creator(dataProvider);
                 datas.forEach(data => {
-                    if (data.completion.label && (!tokenText  || (ws && tokenText !== data.completion.label) || (!ws && tokenText.startsWith(data.completion.label) && tokenText !== data.completion.label))) {
+                    if (data.completion.label && (!tokenText || (ws && tokenText !== data.completion.label) || (!ws && tokenText.startsWith(data.completion.label) && tokenText !== data.completion.label))) {
                         const combined = combineCompletionDatas(data, others, dataProvider);
                         completions.push(combined.completion);
                     }

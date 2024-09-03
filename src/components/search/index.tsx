@@ -13,9 +13,12 @@ export default function Search(props: SearchProps) {
     const handleSearchExprChange = React.useCallback((expr: string) => {
         dispatch(setSearchExpr(expr));
     }, [dispatch]);
+    const onSearch = React.useCallback((code: string) => {
+        dispatch(search(code));
+    }, [dispatch, search]);
     return (
         <div>
-            <PureSearch value={searchExpr} onValueChange={handleSearchExprChange} {...props} />
+            <PureSearch value={searchExpr} onValueChange={handleSearchExprChange} onSearch={onSearch} {...props} />
         </div>
     )
 }
