@@ -6,7 +6,7 @@ import { search as searchLanguage } from './lang';
 import { autocompletion, closeBrackets } from '@codemirror/autocomplete';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { completedStateEffectType, extraState } from './langdata';
-import { toAggregation } from '../../lib/ssearch/mongo';
+import { properties } from '@/conf/ssearch';
 
 export interface PureSearchProps {
     value: string;
@@ -44,14 +44,7 @@ export default function PureSearch({ value, onValueChange, className, onSearch }
             syntaxHighlighting(defaultHighlightStyle),
             autocompletion({ activateOnTyping: true }),
             searchLanguage({
-                properties: [
-                    { name: 'var1' },
-                    { name: 'var2' },
-                    { name: 'var3' },
-                    { name: 'p1' },
-                    { name: 'p2' },
-                    { name: 'p3' },
-                ],
+                properties,
             }),
             closeBrackets(),
         ],

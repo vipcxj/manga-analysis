@@ -6,8 +6,32 @@ export interface CompletionPropertyInfo {
     snippet?: string;
 }
 
-const properties: CompletionPropertyInfo[] = [
+export const properties: CompletionPropertyInfo[] = [
     {
-        name: '',
-    }
+        name: 'artists',
+    },
+    {
+        name: 'categories',
+    },
+    {
+        name: 'characters',
+    },
+    {
+        name: 'groups',
+    },
+    {
+        name: 'languages',
+    },
+    {
+        name: 'tags',
+    },
+    {
+        name: 'title_english',
+    },
+    {
+        name: 'title_japanese',
+    },
+    {
+        name: 'title_pretty',
+    },
 ];
