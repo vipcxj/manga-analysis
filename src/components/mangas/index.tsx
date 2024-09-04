@@ -14,7 +14,7 @@ export default function Mangas() {
     return (
         <div className='flex flex-col items-center w-full'>
             { mangas.map(manga => (
-                <MangaCard info={manga} />
+                <MangaCard key={manga._id} info={manga} />
             )) }
         </div>
     )

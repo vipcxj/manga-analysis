@@ -20,12 +20,12 @@ const config: MangaConfig = {
     imageRoot,
 };
 
-export function localImageUrl(p: string, browser: boolean) {
+export function localImageUrl(p: string) {
     let ap = path.resolve(imageRoot, p);
     if (path.sep === '\\') {
         ap = ap.replaceAll('\\', '/');
     }
-    return browser ? `file:/${ap}` : ap;
+    return ap;
 }
 
 export default config;
