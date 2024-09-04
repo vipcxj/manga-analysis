@@ -1,3 +1,5 @@
+import { MangaInfo } from '@/lib/mongo/type';
+
 export const searchMangas = async (expr: string, skip?: number, limit?: number) => {
     return fetch('/api/mangas/search', {
         method: 'POST',
@@ -6,5 +8,5 @@ export const searchMangas = async (expr: string, skip?: number, limit?: number) 
             skip,
             limit,
         }),
-    }).then(res => res.json());
+    }).then(res => res.json() as Promise<MangaInfo[]>);
 }

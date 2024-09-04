@@ -1,41 +1,10 @@
 import { MongoClient, MongoClientOptions } from 'mongodb';
 import mongoConf from '@/conf/mongo';
 
-let uri: string;
-if (process.env.MONGODB_URI) {
-    uri = process.env.MONGODB_URI;
-} else {
-    uri = mongoConf.connectString;
-}
-let user: string | undefined;
-if (process.env.MONGODB_USER) {
-    user = process.env.MONGODB_USER;
-} else {
-    user = mongoConf.user;
-}
-let pass: string | undefined;
-if (process.env.MONGODB_PASS) {
-    pass = process.env.MONGODB_PASS;
-} else {
-    pass = mongoConf.pass;
-}
-let mangasDbName: string;
-if (process.env.MONGODB_DB) {
-    mangasDbName = process.env.MONGODB_DB;
-} else {
-    mangasDbName = mongoConf.db;
-}
-let mangaColName: string;
-if (process.env.MONGODB_COL_MANGA) {
-    mangaColName = process.env.MONGODB_COL_MANGA;
-} else {
-    mangaColName = mongoConf.colManga;
-}
-
 const opts: MongoClientOptions = {
     auth: {
-        username: user,
-        password: pass,
+        username: mongoConf.user,
+        password: mongoConf.pass,
     },
 };
 
@@ -49,22 +18,22 @@ if (process.env.NODE_ENV === "development") {
     };
 
     if (!globalWithMongo._mongoClient) {
-        globalWithMongo._mongoClient = new MongoClient(uri, opts);
+        globalWithMongo._mongoClient = new MongoClient(mongoConf.connectString, opts);
     }
     client = globalWithMongo._mongoClient;
 } else {
     // In production mode, it's best to not use a global variable.
-    client = new MongoClient(uri, opts);
+    client = new MongoClient(mongoConf.connectString, opts);
 }
 
 export default client;
 
 export async function dbMangas() {
     const conn = await client.connect();
-    return conn.db(mangasDbName);
+    return conn.db(mongoConf.db);
 }
 
 export async function colMangas() {
     const db = await dbMangas();
-    return db.collection(mangaColName);
+    return db.collection(mongoConf.colManga);
 }

@@ -2,8 +2,7 @@
 import { createAppSlice } from '@/lib/createAppSlice';
 import { searchMangas } from './mangasAPI';
 import { PayloadAction } from '@reduxjs/toolkit';
-
-export interface MangaInfo {}
+import type { MangaInfo } from '@/lib/mongo/type';
 
 export interface MangaDetail {}
 

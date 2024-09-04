@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { config as configDotenv } from 'dotenv';
 import StoreProvider from "./StoreProvider";
-import Search from '@/components/search'
+import Search from '@/components/search';
+import Mangas from '@/components/mangas';
 import "./globals.css";
 
 configDotenv();
@@ -23,7 +24,8 @@ export default function RootLayout({
       <body className={inter.className}>
         <main className="flex min-h-screen flex-row items-center justify-between p-0">
           <StoreProvider>
-            <div className="w-60 h-screen bg-slate-900">
+            <div className="w-60 h-screen bg-slate-900 pt-4 overflow-y-scroll scroll-my-2">
+              <Mangas />
             </div>
             <div className="h-screen flex-grow flex flex-col">
               <div className="w-full h-24 bg-slate-50 shadow-md">

@@ -151,10 +151,10 @@ function expandExprAndLogicalExpr(op: MatchOp, left: VarType, right: LogicalExpr
 
 type MongoPrim = string | number | boolean | { $getField: string };
 
-function var2Mongo(v: VarType): MongoPrim {
+function var2Mongo(v: VarType, asKey: boolean = false): MongoPrim {
     if (isVariableNode(v)) {
         if (isGoodVariableName(v.name)) {
-            return `\$${v.name}`;
+            return asKey ? v.name : `\$${v.name}`;
         } else {
             return {
                 $getField: v.name,
@@ -287,11 +287,11 @@ function matchState2Mongo(state: MatchState): Record<string, any> {
                 }
                 if (isGoodVariableNode(state.left)) {
                     return {
-                        [var2Mongo(state.left) as string]: { [mop]: var2Mongo(state.right) },
+                        [var2Mongo(state.left, true) as string]: { [mop]: var2Mongo(state.right) },
                     };
                 } else {
                     return {
-                        [var2Mongo(state.right) as string]: { [rmop]: var2Mongo(state.left) },
+                        [var2Mongo(state.right, true) as string]: { [rmop]: var2Mongo(state.left) },
                     };
                 }
             } else {
