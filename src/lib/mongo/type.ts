@@ -21,3 +21,25 @@ export interface MangaInfo {
         height: number,
     };
 }
+
+export interface ImageInfo {
+    t: 'j' | 'p' | 'g',
+    w: number;
+    h: number;
+}
+
+export interface PageInfo {
+    url: string;
+    path: string;
+    checksum: string;
+    status: string;
+}
+
+export interface MangaDetail extends MangaInfo {
+    images: {
+        cover?: ImageInfo;
+        thumbnail?: ImageInfo;
+        pages: ImageInfo[];
+    };
+    download_pages: PageInfo[];
+}

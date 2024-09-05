@@ -4,7 +4,7 @@ import { streamFile } from '@/lib/utils/stream';
 import fs from 'fs/promises';
 import mime from 'mime-types';
 
-export async function GET(req: NextRequest, { params }: { params: { slug: string[] }}) {
+export async function GET(req: NextRequest, { params }: { params: { slug: string[] } }) {
     try {
         const path = localImageUrl(params.slug.join('/'));
         const contentType = mime.lookup(path);

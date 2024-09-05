@@ -18,7 +18,13 @@ export default function Search(props: SearchProps) {
     }, [dispatch, search]);
     return (
         <div>
-            <PureSearch value={searchExpr} onValueChange={handleSearchExprChange} onSearch={onSearch} {...props} />
+            <PureSearch 
+                value={searchExpr} 
+                onValueChange={handleSearchExprChange} 
+                onSearch={onSearch}
+                loading={searchStatus === 'loading'}
+                {...props}
+             />
         </div>
     )
 }

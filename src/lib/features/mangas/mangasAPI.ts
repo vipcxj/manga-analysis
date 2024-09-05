@@ -1,4 +1,4 @@
-import { MangaInfo } from '@/lib/mongo/type';
+import { MangaInfo, MangaDetail } from '@/lib/mongo/type';
 
 export const searchMangas = async (expr: string, skip?: number, limit?: number) => {
     return fetch('/api/mangas/search', {
@@ -9,4 +9,8 @@ export const searchMangas = async (expr: string, skip?: number, limit?: number) 
             limit,
         }),
     }).then(res => res.json() as Promise<MangaInfo[]>);
+}
+
+export const getMangaDetail = async (id: string) => {
+    return fetch(`/api/mangas/${id}`).then(res => res.json() as Promise<MangaDetail | null>)
 }

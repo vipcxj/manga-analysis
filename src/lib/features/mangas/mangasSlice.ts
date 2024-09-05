@@ -1,21 +1,25 @@
 
 import { createAppSlice } from '@/lib/createAppSlice';
-import { searchMangas } from './mangasAPI';
+import { searchMangas, getMangaDetail } from './mangasAPI';
 import { PayloadAction } from '@reduxjs/toolkit';
-import type { MangaInfo } from '@/lib/mongo/type';
-
-export interface MangaDetail {}
+import type { MangaInfo, MangaDetail } from '@/lib/mongo/type';
 
 export interface MangasSliceState {
     searchExpr: string;
     searchStatus: 'idle' | 'loading' | 'failed';
     mangaInfoList: Array<MangaInfo>;
+    currentMangaInfo: MangaInfo | null;
+    currentMangaDetail: MangaDetail | null;
+    currentMangaStatus: 'idle' | 'loading' | 'failed';
 }
 
 const initialState: MangasSliceState = {
     searchExpr: '',
     searchStatus: 'idle',
     mangaInfoList: [],
+    currentMangaInfo: null,
+    currentMangaDetail: null,
+    currentMangaStatus: 'idle',
 };
 
 export const mangasSlice = createAppSlice({
@@ -34,6 +38,7 @@ export const mangasSlice = createAppSlice({
                     state.searchStatus = 'loading';
                 },
                 fulfilled: (state, action) => {
+                    state.searchStatus = 'idle';
                     state.mangaInfoList = action.payload;
                 },
                 rejected: (state) => {
@@ -41,18 +46,48 @@ export const mangasSlice = createAppSlice({
                 }
             },
         ),
+        setCurrentMangaInfo: create.reducer((state, action: PayloadAction<string>) => {
+            const info = state.mangaInfoList.find(info => info._id === action.payload);
+            if (info) {
+                state.currentMangaInfo = info;
+            }
+        }),
+        setCurrentManga: create.asyncThunk(
+            async (id: string, api) => {
+                api.dispatch(mangasSlice.actions.setCurrentMangaInfo(id));
+                return getMangaDetail(id);
+            },
+            {
+                pending: (state) => {
+                    state.currentMangaStatus = 'loading';
+                },
+                fulfilled: (state, action) => {
+                    state.currentMangaStatus = 'idle';
+                    state.currentMangaDetail = action.payload;
+                },
+                rejected: (state) => {
+                    state.currentMangaStatus = 'failed';
+                },
+            }
+        ),
     }),
     selectors: {
         selectSearchExpr: (mangas) => mangas.searchExpr,
         selectSearchStatus: (mangas) => mangas.searchStatus,
         selectMangaInfoList: (mangas) => mangas.mangaInfoList,
+        selectCurrentMangaStatus: (mangas) => mangas.currentMangaStatus,
+        selectCurrentMangaInfo: (mangas) => mangas.currentMangaInfo,
+        selectCurrentMangaDetail: (mangas) => mangas.currentMangaDetail,
     },
 })
 
-export const { setSearchExpr, search } = mangasSlice.actions;
+export const { setSearchExpr, search, setCurrentManga } = mangasSlice.actions;
 
 export const {
     selectSearchExpr,
     selectSearchStatus,
-    selectMangaInfoList
+    selectMangaInfoList,
+    selectCurrentMangaStatus,
+    selectCurrentMangaInfo,
+    selectCurrentMangaDetail,
 } = mangasSlice.selectors;
