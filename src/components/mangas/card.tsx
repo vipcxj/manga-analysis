@@ -25,7 +25,7 @@ export default function MangaCard({ path, title, onClick }: MangaCardProps) {
     return (
         <div className='relative w-48 h-48 p-2 m-3 rounded-xl bg-slate-50 ring-4'>
             <div
-                className='w-full h-full bg-contain bg-center bg-no-repeat'
+                className='w-full h-full bg-contain bg-center bg-no-repeat cursor-pointer'
                 style={{ backgroundImage: `url(/api/mangas/images/${path})` }}
                 onClick={onClick}
             />

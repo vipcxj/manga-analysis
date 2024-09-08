@@ -15,16 +15,14 @@ export default function Search(props: SearchProps) {
     }, [dispatch]);
     const onSearch = React.useCallback((code: string) => {
         dispatch(search(code));
-    }, [dispatch, search]);
+    }, [dispatch]);
     return (
-        <div>
-            <PureSearch 
-                value={searchExpr} 
-                onValueChange={handleSearchExprChange} 
-                onSearch={onSearch}
-                loading={searchStatus === 'loading'}
-                {...props}
-             />
-        </div>
+        <PureSearch 
+            value={searchExpr} 
+            onValueChange={handleSearchExprChange} 
+            onSearch={onSearch}
+            loading={searchStatus === 'loading'}
+            {...props}
+        />
     )
 }

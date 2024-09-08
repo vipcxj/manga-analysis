@@ -100,7 +100,7 @@ export default function PureSearch({ value, onValueChange, className, onSearch, 
             />
         </svg>
     );
-    return <div className='pt-2 relative mx-auto text-gray-600 w-96 h-9'>
+    return <div className='relative mx-auto text-gray-600 w-96 h-9'>
         <CodeMirror
             id='search'
             ref={cmRef}

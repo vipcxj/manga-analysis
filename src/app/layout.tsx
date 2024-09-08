@@ -5,6 +5,7 @@ import StoreProvider from "./StoreProvider";
 import Search from '@/components/search';
 import Mangas from '@/components/mangas';
 import "./globals.css";
+import Pagination from "@/components/toolbar/pagination";
 
 configDotenv();
 const inter = Inter({ subsets: ["latin"] });
@@ -28,8 +29,13 @@ export default function RootLayout({
               <Mangas />
             </div>
             <div className="h-screen flex-grow flex flex-col">
-              <div className="grow-0 shrink-0 w-full h-24 bg-slate-50 shadow-md">
-                <Search className="" />
+              <div className="flex flex-col grow-0 shrink-0 w-full h-24 bg-slate-50 shadow-md divide-y">
+                <div className="grow flex items-center">
+                  <Search className="" />
+                </div>
+                <div className="basis-9">
+                  <Pagination />
+                </div>
               </div>
               <div className="w-full flex-grow overflow-y-scroll">
                 { children }

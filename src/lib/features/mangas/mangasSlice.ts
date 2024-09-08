@@ -11,6 +11,7 @@ export interface MangasSliceState {
     currentMangaInfo: MangaInfo | null;
     currentMangaDetail: MangaDetail | null;
     currentMangaStatus: 'idle' | 'loading' | 'failed';
+    currentMangaPage: number;
 }
 
 const initialState: MangasSliceState = {
@@ -20,6 +21,7 @@ const initialState: MangasSliceState = {
     currentMangaInfo: null,
     currentMangaDetail: null,
     currentMangaStatus: 'idle',
+    currentMangaPage: 0,
 };
 
 export const mangasSlice = createAppSlice({
@@ -70,6 +72,23 @@ export const mangasSlice = createAppSlice({
                 },
             }
         ),
+        setCurrentMangaPage: create.reducer((state, action: PayloadAction<number>) => {
+            state.currentMangaPage = action.payload;
+        }),
+        nextCurrentMangaPage: create.reducer((state) => {
+            if (state.currentMangaInfo) {
+                if (state.currentMangaPage < state.currentMangaInfo.pages - 1) {
+                    state.currentMangaPage ++;
+                }
+            }
+        }),
+        prevCurrentMangaPage: create.reducer((state) => {
+            if (state.currentMangaInfo) {
+                if (state.currentMangaPage > 0) {
+                    state.currentMangaPage --;
+                }
+            }
+        }),
     }),
     selectors: {
         selectSearchExpr: (mangas) => mangas.searchExpr,
@@ -78,10 +97,11 @@ export const mangasSlice = createAppSlice({
         selectCurrentMangaStatus: (mangas) => mangas.currentMangaStatus,
         selectCurrentMangaInfo: (mangas) => mangas.currentMangaInfo,
         selectCurrentMangaDetail: (mangas) => mangas.currentMangaDetail,
+        selectCurrentMangaPage: (mangas) => mangas.currentMangaPage,
     },
 })
 
-export const { setSearchExpr, search, setCurrentManga } = mangasSlice.actions;
+export const { setSearchExpr, search, setCurrentManga, setCurrentMangaPage, nextCurrentMangaPage, prevCurrentMangaPage } = mangasSlice.actions;
 
 export const {
     selectSearchExpr,
@@ -90,4 +110,5 @@ export const {
     selectCurrentMangaStatus,
     selectCurrentMangaInfo,
     selectCurrentMangaDetail,
+    selectCurrentMangaPage,
 } = mangasSlice.selectors;
