@@ -33,8 +33,10 @@ export default function RootLayout({
                 <div className="grow flex items-center">
                   <Search className="" />
                 </div>
-                <div className="basis-9">
-                  <Pagination />
+                <div className="flex basis-9 items-center">
+                  <div className="flex-grow"/>
+                  <Pagination currentPage={0} maxPage={10}/>
+                  <div className="flex-grow"/>
                 </div>
               </div>
               <div className="w-full flex-grow overflow-y-scroll">
