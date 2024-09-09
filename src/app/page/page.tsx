@@ -6,7 +6,7 @@ import { MangaDetail } from '@/lib/mongo/type';
 import React from 'react';
 
 function getMangaInfo(detail: MangaDetail | null, page: number) {
-    if (detail?.images.pages && detail.images.pages.length > page && detail?.download_pages && detail.download_pages.length > page) {
+    if (page >= 0 && detail?.images.pages && detail.images.pages.length > page && detail?.download_pages && detail.download_pages.length > page) {
         const { w, h } = detail.images.pages[page];
         const { path } = detail.download_pages[page];
         return {

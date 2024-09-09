@@ -35,7 +35,7 @@ export default function RootLayout({
                 </div>
                 <div className="flex basis-9 items-center">
                   <div className="flex-grow"/>
-                  <Pagination currentPage={0} maxPage={10}/>
+                  <Pagination />
                   <div className="flex-grow"/>
                 </div>
               </div>

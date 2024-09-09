@@ -21,7 +21,7 @@ const initialState: MangasSliceState = {
     currentMangaInfo: null,
     currentMangaDetail: null,
     currentMangaStatus: 'idle',
-    currentMangaPage: 0,
+    currentMangaPage: -1,
 };
 
 export const mangasSlice = createAppSlice({
@@ -56,6 +56,7 @@ export const mangasSlice = createAppSlice({
         }),
         setCurrentManga: create.asyncThunk(
             async (id: string, api) => {
+                api.dispatch(mangasSlice.actions.setCurrentMangaPage(-1));
                 api.dispatch(mangasSlice.actions.setCurrentMangaInfo(id));
                 return getMangaDetail(id);
             },
