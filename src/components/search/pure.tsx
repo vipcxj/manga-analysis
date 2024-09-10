@@ -106,7 +106,7 @@ export default function PureSearch({ value, onValueChange, className, onSearch, 
             ref={cmRef}
             value={value}
             onChange={onChange}
-            className={`${className} border-2 border-gray-300 bg-white h-8 px-1 pr-10 rounded-lg text-sm focus:!ring-1`}
+            className={`${className} border-2 border-gray-300 bg-white h-8 px-1 pr-10 rounded-lg text-sm focus-within:ring-1`}
             basicSetup={false}
             theme={searchTheme}
             extensions={extensionList}
