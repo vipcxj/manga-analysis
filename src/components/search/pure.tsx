@@ -112,7 +112,7 @@ export default function PureSearch({ value, onValueChange, className, onSearch, 
             extensions={extensionList}
         />
         <button
-            type="submit" className="absolute right-0 top-0 mt-2 mr-3"
+            type="submit" className="absolute right-0 top-0 mt-3 mr-3"
             onClick={onClick}
         >
           { icon }

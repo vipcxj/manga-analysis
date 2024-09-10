@@ -31,7 +31,7 @@ export default function RootLayout({
             <div className="h-screen flex-grow flex flex-col">
               <div className="flex flex-col grow-0 shrink-0 w-full h-24 bg-slate-50 shadow-md divide-y">
                 <div className="grow flex items-center">
-                  <Search className="" />
+                  <Search className="my-1" />
                 </div>
                 <div className="flex basis-9 items-center">
                   <Toolbar />

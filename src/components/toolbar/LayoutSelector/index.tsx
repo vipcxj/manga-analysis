@@ -22,9 +22,9 @@ export default function LayoutSelector() {
         <div className='relative'>
             <Select 
                 className={clsx(
-                    'm-3 pt-1 pb-1 pl-2 pr-6 block appearance-none',
+                    'm-2 pt-1 pb-1 pl-2 pr-6 block appearance-none',
                     'rounded-lg border-none',
-                    'bg-black/10 text-sm/6 text-black/60',
+                    'bg-black/10 text-xs/6 text-black/60',
                     'hover:bg-black/20 hover:text-black/80',
                     'active:ring-1 active:ring-blue-500/50'
                 )}
@@ -36,7 +36,7 @@ export default function LayoutSelector() {
                 <option value="original">{ MangaLayout2Name['original'] }</option>
             </Select>
             <ChevronDownIcon
-                className="group pointer-events-none absolute top-5 right-4 size-4 fill-black/50"
+                className="group pointer-events-none absolute top-4 right-3 size-4 fill-black/50"
                 aria-hidden="true"
             />
         </div>
