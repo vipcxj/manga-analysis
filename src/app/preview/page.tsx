@@ -32,7 +32,7 @@ export default function Preview() {
         return null;
     }
     return (
-        <div className='flex flex-wrap'>
+        <div className='flex flex-wrap justify-center mt-3'>
             { mangaDetail?.download_pages.map((page, i) => (
                 <MangaCard
                     key={i}

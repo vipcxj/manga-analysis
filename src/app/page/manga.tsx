@@ -15,11 +15,15 @@ export default function Manga(props: MangaProps) {
     if (mode === 'original') {
         style.width = width;
         style.height = height;
+        style.marginLeft = 'auto';
+        style.marginRight = 'auto';
     } else if (mode === 'fit-width') {
         style.width = '100%';
         style.aspectRatio = `${width / height}`;
     } else {
         style.height = '100%';
+        style.marginLeft = 'auto';
+        style.marginRight = 'auto';
         style.aspectRatio = `${width / height}`;
     }
     return (

@@ -5,7 +5,7 @@ import StoreProvider from "./StoreProvider";
 import Search from '@/components/search';
 import Mangas from '@/components/mangas';
 import "./globals.css";
-import Pagination from "@/components/toolbar/pagination";
+import Toolbar from "@/components/toolbar";
 
 configDotenv();
 const inter = Inter({ subsets: ["latin"] });
@@ -34,9 +34,7 @@ export default function RootLayout({
                   <Search className="" />
                 </div>
                 <div className="flex basis-9 items-center">
-                  <div className="flex-grow"/>
-                  <Pagination />
-                  <div className="flex-grow"/>
+                  <Toolbar />
                 </div>
               </div>
               <div className="w-full flex-grow overflow-y-scroll">

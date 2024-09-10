@@ -1,6 +1,12 @@
 'use client';
 import { useAppSelector, useAppDispatch } from '@/lib/hooks';
-import { selectCurrentMangaDetail, selectCurrentMangaPage, nextCurrentMangaPage, prevCurrentMangaPage } from '@/lib/features/mangas/mangasSlice';
+import {
+    selectCurrentMangaDetail,
+    selectCurrentMangaPage,
+    selectCurrentMangaLayout,
+    nextCurrentMangaPage,
+    prevCurrentMangaPage,
+} from '@/lib/features/mangas/mangasSlice';
 import Manga from './manga';
 import { MangaDetail } from '@/lib/mongo/type';
 import React from 'react';
@@ -23,6 +29,7 @@ export default function Page() {
     const mangaDetail = useAppSelector(selectCurrentMangaDetail);
     const mangaPage = useAppSelector(selectCurrentMangaPage);
     const mangaInfo = getMangaInfo(mangaDetail, mangaPage);
+    const layout = useAppSelector(selectCurrentMangaLayout);
     const dispatch = useAppDispatch();
     const onKeyDown: React.KeyboardEventHandler<HTMLDivElement> = React.useCallback((evt) => {
         if (evt.key === 'a' || evt.key === 'ArrowLeft') {
@@ -36,7 +43,7 @@ export default function Page() {
     }
     return (
         <div className="w-full h-full" onKeyDown={onKeyDown} tabIndex={0}>
-            <Manga width={mangaInfo.width} height={mangaInfo.height} path={mangaInfo.path} mode='fit-width' />
+            <Manga width={mangaInfo.width} height={mangaInfo.height} path={mangaInfo.path} mode={layout} />
         </div>
     );
 }

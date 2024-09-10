@@ -34,7 +34,7 @@ export default function PurePagination({ className = '', currentPage, setCurrent
     const onPageClick: React.MouseEventHandler<HTMLDivElement> = React.useCallback(() => {
         setInputPage(`${currentPage}`);
         setInputing(true);
-    }, [currentPage, setInputing, pageInputRef]);
+    }, [currentPage, setInputing]);
     React.useEffect(() => {
         if (inputing) {
             pageInputRef.current?.focus();
