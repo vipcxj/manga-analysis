@@ -7,7 +7,6 @@ export interface PurePaginationProps {
     currentPage: number;
     setCurrentPage: (p: number) => void;
     maxPage: number;
-    pages?: number[];
 }
 
 function calcNumberLen(value: number): number {
@@ -22,15 +21,25 @@ function calcNumberLen(value: number): number {
     return r;
 }
 
-export default function PurePagination({ className = '', currentPage, setCurrentPage, maxPage, pages = [] }: PurePaginationProps) {
-    const color = 'text-slate-500';
-    const hoverColor = 'text-slate-700';
+const color = 'text-slate-500';
+const hoverColor = 'text-slate-700';
+const disableColor = 'text-slate-300';
+const baseArrowIconClassName = 'size-6';
+
+export default function PurePagination({ className = '', currentPage, setCurrentPage, maxPage }: PurePaginationProps) {
     const [inputing, setInputing] = React.useState<boolean>(false);
     const [inputPage, setInputPage] = React.useState<string>(`${currentPage}`);
+    const pageInputRef = React.useRef<HTMLInputElement>(null);
     const inputWidth = `${1 + calcNumberLen(maxPage)}rem`;
     const onPageClick: React.MouseEventHandler<HTMLDivElement> = React.useCallback(() => {
+        setInputPage(`${currentPage}`);
         setInputing(true);
-    }, [setInputing]);
+    }, [currentPage, setInputing, pageInputRef]);
+    React.useEffect(() => {
+        if (inputing) {
+            pageInputRef.current?.focus();
+        }
+    }, [inputing, pageInputRef]);
     const onPageInputChange: React.ChangeEventHandler<HTMLInputElement> = React.useCallback((e) => {
         setInputPage(e.target.value);
     }, [setInputPage])
@@ -60,11 +69,33 @@ export default function PurePagination({ className = '', currentPage, setCurrent
     const onPageMostRightClick: React.MouseEventHandler<HTMLDivElement> = React.useCallback(() => {
         setCurrentPage(maxPage)
     }, [maxPage, setCurrentPage]);
+    let leftArrowIconClassName: string;
+    if (currentPage === 1) {
+        leftArrowIconClassName = `${baseArrowIconClassName} ${disableColor}`;
+    } else {
+        leftArrowIconClassName = `${baseArrowIconClassName} ${color} hover:${hoverColor}`;
+    }
+    let leftArrowDivClassName = 'p-1';
+    if (currentPage > 1) {
+        leftArrowDivClassName = 'cursor-pointer hover:bg-slate-200 p-1 active:ring-1';
+    }
+    let rightArrowIconClassName: string;
+    if (currentPage === maxPage) {
+        rightArrowIconClassName = `${baseArrowIconClassName} ${disableColor}`;
+    } else {
+        rightArrowIconClassName = `${baseArrowIconClassName} ${color} hover:${hoverColor}`;
+    }
+    let rightArrowDivClassName = 'p-1';
+    if (currentPage < maxPage) {
+        rightArrowDivClassName = 'cursor-pointer hover:bg-slate-200 p-1 active:ring-1';
+    }
+
     let pageNode: React.ReactNode;
     if (inputing) {
         pageNode = (
             <div className="p-1">
                 <input
+                    ref={pageInputRef}
                     style={{ width: inputWidth }}
                     type="number"
                     value={inputPage}
@@ -84,24 +115,24 @@ export default function PurePagination({ className = '', currentPage, setCurrent
     }
     return (
         <div className={`flex ${className}`}>
-            <div className="cursor-pointer hover:bg-slate-200 p-1 active:ring-1" onClick={onPageMostLeftClick}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`size-6 ${color} hover:${hoverColor}`}>
+            <div className={leftArrowDivClassName} onClick={onPageMostLeftClick}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={leftArrowIconClassName}>
                     <path strokeLinecap="round" strokeLinejoin="round" color="none" strokeWidth={2} d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
                 </svg>
             </div>
-            <div className="cursor-pointer hover:bg-slate-200 p-1 active:ring-1" onClick={onPageLeftClick}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`size-6 ${color} hover:${hoverColor}`}>
+            <div className={leftArrowDivClassName} onClick={onPageLeftClick}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={leftArrowIconClassName}>
                     <path strokeLinecap="round" strokeLinejoin="round" color="none" strokeWidth={2.5} d="M15.75 19.5 8.25 12l7.5-7.5" />
                 </svg>
             </div>
             { pageNode }
-            <div className="cursor-pointer hover:bg-slate-200 p-1 active:ring-1" onClick={onPageRightClick}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`size-6 ${color} hover:${hoverColor}`}>
+            <div className={rightArrowDivClassName} onClick={onPageRightClick}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={rightArrowIconClassName}>
                     <path strokeLinecap="round" strokeLinejoin="round" color="none" strokeWidth={2.5} d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                 </svg>
             </div>
-            <div className="cursor-pointer hover:bg-slate-200 p-1 active:ring-1" onClick={onPageMostRightClick}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`size-6 ${color} hover:${hoverColor}`}>
+            <div className={rightArrowDivClassName} onClick={onPageMostRightClick}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={rightArrowIconClassName}>
                     <path strokeLinecap="round" strokeLinejoin="round" color="none" strokeWidth={2} d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
                 </svg>
             </div>
