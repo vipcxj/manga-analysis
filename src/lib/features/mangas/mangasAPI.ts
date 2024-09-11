@@ -8,7 +8,10 @@ export const searchMangas = async (expr: string, skip?: number, limit?: number) 
             skip,
             limit,
         }),
-    }).then(res => res.json() as Promise<MangaInfo[]>);
+    }).then(res => res.json() as Promise<{
+        paginatedResults: MangaInfo[],
+        total: number,
+    }>);
 }
 
 export const getMangaDetail = async (id: string) => {

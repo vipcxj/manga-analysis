@@ -10,6 +10,9 @@ export interface MangasSliceState {
     searchExpr: string;
     searchStatus: 'idle' | 'loading' | 'failed';
     mangaInfoList: Array<MangaInfo>;
+    mangaInfoPage: number;
+    mangaInfoCount: number;
+    mangaInfoPerPage: number;
     currentMangaInfo: MangaInfo | null;
     currentMangaDetail: MangaDetail | null;
     currentMangaStatus: 'idle' | 'loading' | 'failed';
@@ -21,6 +24,9 @@ const initialState: MangasSliceState = {
     searchExpr: '',
     searchStatus: 'idle',
     mangaInfoList: [],
+    mangaInfoPage: -1,
+    mangaInfoCount: 0,
+    mangaInfoPerPage: 10,
     currentMangaInfo: null,
     currentMangaDetail: null,
     currentMangaStatus: 'idle',
@@ -36,8 +42,17 @@ export const mangasSlice = createAppSlice({
             state.searchExpr = action.payload;
         }),
         search: create.asyncThunk(
-            async (expr: string) => {
-                return searchMangas(expr);
+            async (payload: string | null | undefined, api) => {
+                const perPage: number = mangasSlice.selectors.selectMangaInfoPerPage(api.getState() as any);
+                const page: number = mangasSlice.selectors.selectMangaInfoPage(api.getState() as any);
+                let searchExpr: string;
+                if (payload) {
+                    searchExpr = payload;
+                    api.dispatch(mangasSlice.actions.setSearchExpr(payload));
+                } else {
+                    searchExpr = mangasSlice.selectors.selectSearchExpr(api.getState() as any);
+                }
+                return searchMangas(searchExpr, page === -1 ? 0 : page * perPage, perPage);
             },
             {
                 pending: (state) => {
@@ -45,13 +60,21 @@ export const mangasSlice = createAppSlice({
                 },
                 fulfilled: (state, action) => {
                     state.searchStatus = 'idle';
-                    state.mangaInfoList = action.payload;
+                    const { paginatedResults, total } = action.payload;
+                    state.mangaInfoList = paginatedResults;
+                    state.mangaInfoCount = total;
+                    if (state.mangaInfoPage === -1 && state.mangaInfoCount > 0) {
+                        state.mangaInfoPage = 0;
+                    }
                 },
                 rejected: (state) => {
                     state.searchStatus = 'failed';
                 }
             },
         ),
+        setMangaInfoPage: create.reducer((state, action: PayloadAction<number>) => {
+            state.mangaInfoPage = action.payload;
+        }),
         setCurrentMangaInfo: create.reducer((state, action: PayloadAction<string>) => {
             const info = state.mangaInfoList.find(info => info._id === action.payload);
             if (info) {
@@ -102,6 +125,9 @@ export const mangasSlice = createAppSlice({
         selectSearchExpr: (mangas) => mangas.searchExpr,
         selectSearchStatus: (mangas) => mangas.searchStatus,
         selectMangaInfoList: (mangas) => mangas.mangaInfoList,
+        selectMangaInfoPage: (mangas) => mangas.mangaInfoPage,
+        selectMangaInfoCount: (mangas) => mangas.mangaInfoCount,
+        selectMangaInfoPerPage: (mangas) => mangas.mangaInfoPerPage,
         selectCurrentMangaStatus: (mangas) => mangas.currentMangaStatus,
         selectCurrentMangaInfo: (mangas) => mangas.currentMangaInfo,
         selectCurrentMangaDetail: (mangas) => mangas.currentMangaDetail,
@@ -111,8 +137,9 @@ export const mangasSlice = createAppSlice({
 })
 
 export const {
-    setSearchExpr, 
-    search, 
+    setSearchExpr,
+    search,
+    setMangaInfoPage,
     setCurrentManga, 
     setCurrentMangaPage,
     nextCurrentMangaPage,
@@ -124,6 +151,9 @@ export const {
     selectSearchExpr,
     selectSearchStatus,
     selectMangaInfoList,
+    selectMangaInfoPage,
+    selectMangaInfoCount,
+    selectMangaInfoPerPage,
     selectCurrentMangaStatus,
     selectCurrentMangaInfo,
     selectCurrentMangaDetail,

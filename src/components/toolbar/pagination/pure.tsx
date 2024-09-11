@@ -7,10 +7,16 @@ export interface PurePaginationProps {
     currentPage: number;
     setCurrentPage: (p: number) => void;
     maxPage: number;
+    color?: string;
+    hoverColor?: string;
+    disableColor?: string;
 }
 
 function calcNumberLen(value: number): number {
     let r = 0;
+    if (value !== value || value == undefined) {
+        return r;
+    }
     do {
         value /= 10;
         ++r;
@@ -21,16 +27,24 @@ function calcNumberLen(value: number): number {
     return r;
 }
 
-const color = 'text-slate-500';
-const hoverColor = 'text-slate-700';
-const disableColor = 'text-slate-300';
-const baseArrowIconClassName = 'size-6';
+const defaultColor = 'text-slate-500';
+const defaultHoverColor = 'text-slate-700';
+const defaultDisableColor = 'text-slate-300';
+const baseArrowIconClassName = 'size-4';
 
-export default function PurePagination({ className = '', currentPage, setCurrentPage, maxPage }: PurePaginationProps) {
+export default function PurePagination({
+    className = '',
+    currentPage,
+    setCurrentPage,
+    maxPage,
+    color = defaultColor,
+    hoverColor = defaultHoverColor,
+    disableColor = defaultDisableColor,
+}: PurePaginationProps) {
     const [inputing, setInputing] = React.useState<boolean>(false);
     const [inputPage, setInputPage] = React.useState<string>(`${currentPage}`);
     const pageInputRef = React.useRef<HTMLInputElement>(null);
-    const inputWidth = `${1 + calcNumberLen(maxPage)}rem`;
+    const inputWidth = `${1 + Math.ceil(calcNumberLen(maxPage) / 2)}rem`;
     const onPageClick: React.MouseEventHandler<HTMLDivElement> = React.useCallback(() => {
         setInputPage(`${currentPage}`);
         setInputing(true);
@@ -93,7 +107,7 @@ export default function PurePagination({ className = '', currentPage, setCurrent
     let pageNode: React.ReactNode;
     if (inputing) {
         pageNode = (
-            <div className="p-1">
+            <div className={`p-1 text-xs ${color}`}>
                 <input
                     ref={pageInputRef}
                     style={{ width: inputWidth }}
@@ -110,7 +124,7 @@ export default function PurePagination({ className = '', currentPage, setCurrent
         )
     } else {
         pageNode = (
-            <div className={`cursor-pointer hover:bg-slate-200 ${color} hover:${hoverColor} p-1 active:ring-1 select-none font-bold`} onClick={onPageClick}> { `${currentPage} / ${maxPage}` } </div>
+            <div className={`cursor-pointer text-xs hover:bg-slate-200 ${color} hover:${hoverColor} p-1 active:ring-1 select-none font-bold`} onClick={onPageClick}> { `${currentPage} / ${maxPage}` } </div>
         );
     }
     return (
