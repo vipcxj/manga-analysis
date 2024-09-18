@@ -15,7 +15,11 @@
 }
 
 state {
-    MatchState
+    MatchState | UseState
+}
+
+UseState {
+    kw<"use"> ":" Identifier
 }
 
 MatchState {

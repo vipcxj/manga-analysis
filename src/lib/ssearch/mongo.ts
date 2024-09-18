@@ -10,11 +10,16 @@ import {
     IntegerLiteralContext,
     LogicalExpressionContext,
     MatchConditionContext,
+    MatchStateContext,
     ParExpressionContext,
     PipelineContext,
-    StringLiteralContext
+    SearchStateContext,
+    SSearchParser,
+    StringLiteralContext,
+    UseStateContext
 } from "@/antlr/ssearch/parser/SSearchParser";
 import { SSearchLexer } from "@/antlr/ssearch/parser/SSearchLexer";
+import { getPipeline } from '@/conf/ssearch';
 
 interface NewField {
     name: string;
@@ -76,7 +81,37 @@ interface VariableNode {
     name: string;
 }
 
+type ParseInt<T extends string> 
+  = T extends `${infer Digit extends number}`
+  //                         ^^^^^^^^^^^^^^
+  //                         key element                       
+  ? Digit
+  : never;
+
+type Neg<N extends number> = ParseInt<`-${N}`>;
+
+function neg<N extends number>(n: N): Neg<N> {
+    return -n as Neg<N>;
+}
+
+interface UseState {
+    type: Neg<typeof SSearchParser.RULE_useState>;
+    userPipeline: string;
+}
+
 type MatchState = AndMatchState | OrMatchState | SimpleMatchState | NotMatchState;
+
+type PipelineState = UseState | MatchState;
+
+function isUseState(state: PipelineState): state is UseState {
+    return state.type === neg(SSearchParser.RULE_useState);
+}
+
+function isMatchState(state: PipelineState): state is MatchState {
+    return !isUseState(state);
+}
+
+type Pipeline = PipelineState[];
 
 interface AndMatchState {
     type: typeof SSearchLexer.AND;
@@ -364,6 +399,37 @@ class AggregationVisitor extends SSearchVisitor<any> {
         return `_tmp${this.newFieldNameBase++}`
     }
 
+    visitPipeline = (ctx: PipelineContext): Pipeline => {
+        return ctx.searchState().map(s => this.visitSearchState(s));
+    };
+
+    visitSearchState = (ctx: SearchStateContext): PipelineState => {
+        const useState = ctx.useState();
+        if (useState) {
+            return this.visitUseState(useState);
+        }
+        const matchState = ctx.matchState();
+        if (matchState) {
+            return this.visitMatchState(matchState);
+        }
+        if (ctx.start) {
+            throw new Error(`Invalid search state ${ctx.getText()} at ${ctx.start.line}:${ctx.start.column}`);
+        } else {
+            throw new Error(`Invalid search state ${ctx.getText()}`);
+        }
+    };
+
+    visitUseState = (ctx: UseStateContext): UseState => {
+        return {
+            type: neg(SSearchParser.RULE_useState),
+            userPipeline: ctx.userPipeline().getText(),
+        };
+    };
+
+    visitMatchState = (ctx: MatchStateContext): MatchState => {
+        return this.visitMatchCondition(ctx.matchCondition());
+    };
+
     visitMatchCondition = (ctx: MatchConditionContext): MatchState => {
         const par = ctx.parMatchCondition();
         if (par) {
@@ -552,24 +618,30 @@ class AggregationVisitor extends SSearchVisitor<any> {
     };
 }
 
-export function toAggregation(pipeline: PipelineContext) {
+export function toAggregation(pipelineCtx: PipelineContext) {
     const visitor = new AggregationVisitor();
-    const state = pipeline.accept(visitor) as MatchState;
-    if (visitor.newFields.length > 0) {
-        return [
-            ...newFields2Mongo(visitor.newFields),
-            {
-                $match: matchState2Mongo(state),
-            },
-            {
-                $unset: visitor.newFields.map(f => f.name),
-            },
-        ];
-    } else {
-        return [
-            {
-                $match: matchState2Mongo(state),
-            },
-        ];
-    }
+    const pipeline = pipelineCtx.accept(visitor) as Pipeline;
+    return pipeline.flatMap(state => {
+        if (isUseState(state)) {
+            return getPipeline(state.userPipeline);
+        } else {
+            if (visitor.newFields.length > 0) {
+                return [
+                    ...newFields2Mongo(visitor.newFields),
+                    {
+                        $match: matchState2Mongo(state),
+                    },
+                    {
+                        $unset: visitor.newFields.map(f => f.name),
+                    },
+                ];
+            } else {
+                return [
+                    {
+                        $match: matchState2Mongo(state),
+                    },
+                ];
+            }
+        }
+    })
 }

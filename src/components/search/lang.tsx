@@ -16,6 +16,7 @@ export const searchLanguage = LRLanguage.define({
                 String: t.string,
                 Number: t.number,
                 match: t.keyword,
+                use: t.keyword,
                 OpAnd: t.keyword,
                 OpOr: t.keyword,
                 "true false": t.bool,
@@ -32,7 +33,7 @@ export const searchLanguage = LRLanguage.define({
     },
 });
 
-export function search(dataProvider: CompletionDataProvider = { properties: [] }): [StateField<SSearchLangData>, LanguageSupport, Extension] {
+export function search(dataProvider: CompletionDataProvider = { properties: [], userPipelines: [] }): [StateField<SSearchLangData>, LanguageSupport, Extension] {
     return [
         extraState,
         new LanguageSupport(searchLanguage, [

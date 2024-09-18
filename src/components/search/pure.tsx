@@ -6,7 +6,7 @@ import { search as searchLanguage } from './lang';
 import { autocompletion, closeBrackets } from '@codemirror/autocomplete';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { completedStateEffectType, extraState } from './langdata';
-import { properties } from '@/conf/ssearch';
+import { properties, userPipelines } from '@/conf/ssearch';
 
 export interface PureSearchProps {
     value: string;
@@ -71,6 +71,7 @@ export default function PureSearch({ value, onValueChange, className, onSearch, 
             autocompletion({ activateOnTyping: true }),
             searchLanguage({
                 properties,
+                userPipelines,
             }),
             closeBrackets(),
             keymap.of([

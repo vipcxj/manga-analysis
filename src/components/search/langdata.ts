@@ -67,6 +67,9 @@ function createSSearchLangData(state: EditorState, lint: boolean): SSearchLangDa
     const pipeline = parser.pipeline();
     const c3 = new CodeCompletionCore(parser);
     c3.showResult = true;
+    c3.preferredRules = new Set([
+        SSearchParser.RULE_userPipeline,
+    ]);
     c3.ignoredTokens = new Set([
         SSearchLexer.STRING_LITERAL,
         SSearchLexer.DECIMAL_LITERAL,

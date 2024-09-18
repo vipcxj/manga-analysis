@@ -2,7 +2,11 @@ grammar SSearch;
 
 pipeline: searchState (PIPE searchState)*;
 
-searchState: matchState;
+searchState: matchState | useState;
+
+useState: USE COLON userPipeline;
+
+userPipeline: IDENTIFIER;
 
 matchState: MATCH COLON matchCondition;
 
@@ -65,6 +69,7 @@ integerLiteral:
 floatLiteral: FLOAT_LITERAL;
 
 MATCH: 'match';
+USE: 'use';
 PIPE: '|';
 
 AND: 'and';

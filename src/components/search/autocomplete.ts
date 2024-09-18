@@ -3,7 +3,8 @@ import { CommonTokenStream } from 'antlr4ng';
 import { SSearchLexer } from '@/antlr/ssearch/parser/SSearchLexer';
 import { TokenList } from 'antlr4-c3';
 import { extraState } from "./langdata";
-import { CompletionPropertyInfo } from "@/conf/ssearch";
+import { CompletionPropertyInfo, CompletionUserPipelineInfo } from "@/conf/ssearch";
+import { SSearchParser } from "@/antlr/ssearch/parser/SSearchParser";
 
 function calcCaretTokenIndex(ts: CommonTokenStream, pos: number): [number, number, boolean] {
     const tokens = ts.getTokens()
@@ -46,10 +47,11 @@ function calcCaretTokenIndex(ts: CommonTokenStream, pos: number): [number, numbe
     }
 }
 
-export type { CompletionPropertyInfo } from '@/conf/ssearch';
+export type { CompletionPropertyInfo, CompletionUserPipelineInfo } from '@/conf/ssearch';
 
 export interface CompletionDataProvider {
     properties: CompletionPropertyInfo[];
+    userPipelines: CompletionUserPipelineInfo[];
 }
 
 interface CompletionData {
@@ -90,6 +92,22 @@ function createVariableCompletion(info: CompletionPropertyInfo): Completion {
     }
 }
 
+function createUserPipelineCompletion(info: CompletionUserPipelineInfo): Completion {
+    if (info.snippet) {
+        return snippetCompletion(info.snippet, {
+            label: info.name,
+            type: 'method',
+            detail: info.desc,
+        });
+    } else {
+        return {
+            label: info.name,
+            type: 'method',
+            detail: info.desc,
+        };
+    }
+}
+
 function createOpCompletion(op: string): Completion {
     return {
         label: op,
@@ -119,7 +137,19 @@ function createPropertiesCompletions(provider: CompletionDataProvider): Completi
     }));
 }
 
+function createUserPipelinesCompletions(provider: CompletionDataProvider): CompletionData[] {
+    return provider.userPipelines.map(p => ({
+        completion: createUserPipelineCompletion(p),
+        friend: p.friend,
+        friendNoSkip: p.friendNoSkip,
+    }));
+}
+
 interface Token2Completions {
+    [key: number]: CompletionCreator;
+}
+
+interface Rule2Completions {
     [key: number]: CompletionCreator;
 }
 
@@ -136,6 +166,7 @@ const TOKEN_TO_CANDS: Token2Completions = {
     [SSearchLexer.LE]: createStaticCompletions([createOpCompletion('<=')]),
     [SSearchLexer.LT]: createStaticCompletions([createOpCompletion('<')]),
     [SSearchLexer.MATCH]: createStaticCompletions([createKeywordCompletion('match')], { friend: ':', friendNoSkip: true }),
+    [SSearchLexer.USE]: createStaticCompletions([createKeywordCompletion('use')], { friend: ':', friendNoSkip: true }),
     [SSearchLexer.MOD]: createStaticCompletions([createOpCompletion('%')]),
     [SSearchLexer.MUL]: createStaticCompletions([createOpCompletion('*')]),
     [SSearchLexer.NOT]: createStaticCompletions([createKeywordCompletion('not')]),
@@ -143,6 +174,10 @@ const TOKEN_TO_CANDS: Token2Completions = {
     [SSearchLexer.OR]: createStaticCompletions([createKeywordCompletion('or')]),
     [SSearchLexer.PIPE]: createStaticCompletions([createKeywordCompletion('|')]),
     [SSearchLexer.SUB]: createStaticCompletions([createOpCompletion('-')]),
+};
+
+const RULE_TO_CANDS: Rule2Completions = {
+    [SSearchParser.RULE_userPipeline]: createUserPipelinesCompletions,
 };
 
 function combineCompletionDatas(data: CompletionData, others: TokenList, dataProvider: CompletionDataProvider) {
@@ -170,7 +205,7 @@ function combineCompletionDatas(data: CompletionData, others: TokenList, dataPro
     return combined;
 }
 
-export function completionSource(context: CompletionContext, dataProvider: CompletionDataProvider = { properties: [] }): CompletionResult | null {
+export function completionSource(context: CompletionContext, dataProvider: CompletionDataProvider = { properties: [], userPipelines: [] }): CompletionResult | null {
     const { tokenStream, parser, c3 } = context.state.field(extraState);
 
     const [cti, cti1, valid] = calcCaretTokenIndex(tokenStream, context.pos);
@@ -216,7 +251,7 @@ export function completionSource(context: CompletionContext, dataProvider: Compl
             tokenText = tokenStream.getTextFromRange(token, token);
         }
         cands.tokens.forEach((others, token) => {
-            const creator = TOKEN_TO_CANDS[token]
+            const creator = TOKEN_TO_CANDS[token];
             if (!!creator) {
                 const datas = creator(dataProvider);
                 datas.forEach(data => {
@@ -225,6 +260,15 @@ export function completionSource(context: CompletionContext, dataProvider: Compl
                         completions.push(combined.completion);
                     }
                 });
+            }
+        });
+        cands.rules.forEach((_, rule) => {
+            const creator = RULE_TO_CANDS[rule];
+            if (!!creator) {
+                const datas = creator(dataProvider);
+                datas.forEach(data => {
+                    completions.push(data.completion);
+                })
             }
         });
     }
